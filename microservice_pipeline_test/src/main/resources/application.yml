@@ -1,0 +1,3 @@
+spring.application.name: microservice_pipeline_test
+server:
+    port: 8001
