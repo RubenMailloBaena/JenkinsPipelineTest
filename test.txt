@@ -130,17 +130,23 @@ pipeline {
 }
 
 -----------------------------
+[Pipeline] { (Compilar con Ant task)
+[Pipeline] withFileParameter
+[Pipeline] {
+[Pipeline] dir
 Running in C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp
 [Pipeline] {
 [Pipeline] script
 [Pipeline] {
 [Pipeline] tool
+[Pipeline] tool
+Unpacking https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.9.9/apache-maven-3.9.9-bin.zip to C:\ProgramData\Jenkins\.jenkins\tools\hudson.tasks.Maven_MavenInstallation\Maven_Installation on Jenkins 
 [Pipeline] powershell
 Buildfile: C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp\build.xml
 
 clean:
 powershell.exe : 
-En C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp@tmp\durable-2c5336a5\powershellWrapper.ps1: 3 Carácter: 1
+En C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp@tmp\durable-296c5df2\powershellWrapper.ps1: 3 Carácter: 1
 + & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Comm ...
 + ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (:String) [], RemoteException
@@ -148,7 +154,8 @@ En C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp@tmp\durable
  
 BUILD FAILED
 C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp\build.xml:7: Execute failed: java.io.IOException: Cannot run program "mvn" (in directory 
-"C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp"): CreateProcess error=2, El sistema no puede encontrar el archivo especificado-------------------------
+"C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp"): CreateProcess error=2, El sistema no puede encontrar el archivo especificado
+-------------------------
 
 pipeline {
     agent any
