@@ -1,16 +1,16 @@
-<project name="spring-boot-service" default="build" basedir=".">
+<project name="microservice_example" default="build" basedir=".">
 
     <!-- Ruta del archivo input -->
     <property name="input.file" value="input.txt"/>
 
     <target name="clean">
-        <exec executable="mvn">
+        <exec executable="mvn" dir="microservice_pipeline_test">
             <arg value="clean"/>
         </exec>
     </target>
 
     <target name="compile">
-        <exec executable="mvn">
+        <exec executable="mvn" dir="microservice_pipeline_test">
             <arg value="package"/>
         </exec>
     </target>
