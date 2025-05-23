@@ -5,13 +5,13 @@
     <property environment="env"/>
 
     <target name="clean">
-        <exec executable="${env.MVN_CMD}" dir="microservice_pipeline_test">
+        <exec executable="mvn" dir="microservice_pipeline_test">
             <arg value="clean"/>
         </exec>
     </target>
 
     <target name="compile">
-        <exec executable="${env.MVN_CMD}" dir="microservice_pipeline_test">
+        <exec executable="mvn" dir="microservice_pipeline_test">
             <arg value="package"/>
         </exec>
     </target>
