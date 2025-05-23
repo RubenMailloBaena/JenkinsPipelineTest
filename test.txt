@@ -215,11 +215,11 @@ pipeline {
                             def antCmd = "\"${antHome}\\bin\\ant.bat\""
                             
                             def mavenHome = tool name: 'Maven Installation', type: 'hudson.tasks.Maven$MavenInstallation'
-                            env.PATH = "${mavenHome}\\bin;${env.PATH}"
+                            def mvnCmd = "${mavenHome}\\bin\\mvn.bat" 
                             
                             powershell """
                                 \$inputFile = "\$env:inputFile"
-                                & ${antCmd} "-Dinput.file=\$inputFile"
+                                & ${antCmd} "-Dinput.file=\$inputFile" "-Denv.MVN_CMD=${mvnCmd}"
                             """
                         }
                     }
@@ -228,3 +228,4 @@ pipeline {
         }
     }
 }
+
