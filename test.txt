@@ -210,11 +210,21 @@ pipeline {
             steps{
                 withFileParameter('inputFile'){
                     dir('repo-temp'){
-                        powershell 'ant -Dinput.file="$env:ipnutFile"'
+                        script{
+                            def antHome = tool name: 'Ant Installation', type: 'hudson.tasks.Ant$AntInstallation'
+                            def antCmd = "\"${antHome}\\bin\\ant.bat\""
+                            
+                            def mavenHome = tool name: 'Maven Installation', type: 'hudson.tasks.Maven$MavenInstallation'
+                            env.PATH = "${mavenHome}\\bin;${env.PATH}"
+                            
+                            powershell """
+                                \$inputFile = "\$env:inputFile"
+                                & ${antCmd} "-Dinput.file=\$inputFile"
+                            """
+                        }
                     }
                 }
             }
         }
     }
 }
-
