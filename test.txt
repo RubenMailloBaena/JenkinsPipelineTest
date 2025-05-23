@@ -130,21 +130,27 @@ pipeline {
 }
 
 -----------------------------
-powershell.exe : ant : El término 'ant' no se reconoce como nombre de un cmdlet, función, archivo de script o programa ejecutable. 
-En C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp@tmp\durable-add70178\powershellWrapper.ps1: 3 Carácter: 1
+Unpacking https://archive.apache.org/dist/ant/binaries/apache-ant-1.10.15-bin.zip to C:\ProgramData\Jenkins\.jenkins\tools\hudson.tasks.Ant_AntInstallation\Ant_Installation on Jenkins 
+[Pipeline] powershell
+powershell.exe : En C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp@tmp\durable-397762c4\powershellScript.ps1: 1 
+En C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp@tmp\durable-397762c4\powershellWrapper.ps1: 3 Carácter: 1
 + & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Comm ...
 + ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (ant : El términ...ma ejecutable. :String) [], RemoteException
+    + CategoryInfo          : NotSpecified: (En C:\ProgramDa...lScript.ps1: 1 :String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
-Compruebe si escribió correctamente el nombre o, si incluyó una ruta de acceso, compruebe que dicha ruta es correcta e 
-inténtelo de nuevo.
-En C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp@tmp\durable-add70178\powershellScript.ps1: 1 
-Carácter: 1
-+ ant -Dinput.file="$env:ipnutFile"
-+ ~~~
-    + CategoryInfo          : ObjectNotFound: (ant:String) [], ParentContainsErrorRecordException
-    + FullyQualifiedErrorId : CommandNotFoundException
+Carácter: 103
++ ... sks.Ant_AntInstallation\Ant_Installation\bin\ant.bat" -Dinput.file=or ...
++                                                           ~~~~~~~
+Token '-Dinput' inesperado en la expresión o la instrucción.
+En C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp@tmp\durable-397762c4\powershellScript.ps1: 1 
+Carácter: 110
++ ... bat" -Dinput.file=org.jenkinsci.plugins.workflow.cps.EnvActionImpl@16 ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Token '.file=org.jenkinsci.plugins.workflow.cps.EnvActionImpl@16de33bd:inputFile' inesperado en la expresión o la 
+instrucción.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : UnexpectedToken
 -------------------------
 
 pipeline {
