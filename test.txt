@@ -1,1 +1,68 @@
-FILE FROM GITHUB
+Pipeline: pipeline {
+    agent any
+    
+    parameters{
+        base64File 'inputFile'
+    }
+
+    environment {
+        REPO_URL = 'https://github.com/RubenMailloBaena/JenkinsPipelineTest.git'
+        BRANCH = 'main'
+        ARCHIVO = 'test.txt'
+    }
+
+    stages {
+        stage('Prepare Workspace') {
+            steps {
+                script {
+                    powershell '''
+                        if (Test-Path -Path repo-temp) {
+                            Remove-Item -Path repo-temp -Recurse -Force
+                        }
+                        mkdir repo-temp
+                    '''
+                }
+            }
+        }
+
+        stage('Clonar archivo específico') { //git remote add origin ${REPO_URL} // git remote add origin https://${github-user}:${github-password}@${REPO_URL.replace("https://", "")}
+            steps {
+                script {
+                    powershell """
+                    cd repo-temp
+                    git init
+                    git remote add origin ${REPO_URL}
+                    git config core.sparseCheckout true
+                    "${ARCHIVO}" | Out-File -FilePath .git/info/sparse-checkout -Encoding ascii
+                    git pull origin ${BRANCH}
+                """
+                }
+            }
+        }
+
+        stage('Mostrar contenido de los archivos') {
+            steps {
+                script {
+                    // MOSTRAR ARCHIVO DE GITHUB
+                    powershell """
+                        echo "=== GitHub File ==="
+                        Get-Content .\\repo-temp\\${ARCHIVO}
+                    """
+                }
+                
+                script {
+                   // Mostrar nombre del archivo
+                    echo "=== Input File ==="
+                    
+                    withFileParameter('inputFile') {
+                        powershell 'Get-Content -Path $env:inputFile'
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+What i Need to do: 
