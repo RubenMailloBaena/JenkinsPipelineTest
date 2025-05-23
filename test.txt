@@ -128,3 +128,83 @@ pipeline {
         }
     }
 }
+
+-----------------------------
+powershell.exe : ant : El término 'ant' no se reconoce como nombre de un cmdlet, función, archivo de script o programa ejecutable. 
+En C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp@tmp\durable-add70178\powershellWrapper.ps1: 3 Carácter: 1
++ & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Comm ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ant : El términ...ma ejecutable. :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Compruebe si escribió correctamente el nombre o, si incluyó una ruta de acceso, compruebe que dicha ruta es correcta e 
+inténtelo de nuevo.
+En C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp@tmp\durable-add70178\powershellScript.ps1: 1 
+Carácter: 1
++ ant -Dinput.file="$env:ipnutFile"
++ ~~~
+    + CategoryInfo          : ObjectNotFound: (ant:String) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : CommandNotFoundException
+-------------------------
+
+pipeline {
+    agent any
+    
+    parameters{
+       base64File 'inputFile'
+    }
+
+    environment {
+        REPO_URL = 'https://github.com/RubenMailloBaena/JenkinsPipelineTest.git'
+        BRANCH = 'main'
+        ARCHIVO = 'test.txt'
+    }
+
+    stages {
+        stage('Prepare Workspace') {
+            steps {
+                script {
+                    powershell '''
+                        if (Test-Path -Path repo-temp) {
+                            Remove-Item -Path repo-temp -Recurse -Force
+                        }
+                        mkdir repo-temp
+                    '''
+                }
+            }
+        }
+
+        stage('CLonar Repositorio') { 
+            steps {
+                dir('repo-temp'){
+                    git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
+                }
+            }
+        }
+
+        stage('Mostrar archivo del repo') {
+            steps {
+                powershell 'Get-Content .\\repo-temp\\' + ARCHIVO
+            }
+        }
+        
+        stage('Mostrar archivo de input'){
+            steps{
+                withFileParameter('inputFile'){
+                    powershell 'Get-Content -Path $env:inputFile'
+                }
+            }
+        }
+        
+        stage('Compilar con Ant task'){
+            steps{
+                withFileParameter('inputFile'){
+                    dir('repo-temp'){
+                        powershell 'ant -Dinput.file="$env:ipnutFile"'
+                    }
+                }
+            }
+        }
+    }
+}
+
