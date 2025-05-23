@@ -140,21 +140,17 @@ Running in C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp
 [Pipeline] {
 [Pipeline] tool
 [Pipeline] tool
-Unpacking https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.9.9/apache-maven-3.9.9-bin.zip to C:\ProgramData\Jenkins\.jenkins\tools\hudson.tasks.Maven_MavenInstallation\Maven_Installation on Jenkins 
-[Pipeline] powershell
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp>set INPUT_FILE=C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline@tmp\inputFile5141864217430742661.tmp 
+
+C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp>"C:\ProgramData\Jenkins\.jenkins\tools\hudson.tasks.Ant_AntInstallation\Ant_Installation\bin\ant.bat" -Dinput.file=C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline@tmp\inputFile5141864217430742661.tmp 
 Buildfile: C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp\build.xml
 
 clean:
-powershell.exe : 
-En C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp@tmp\durable-296c5df2\powershellWrapper.ps1: 3 Carácter: 1
-+ & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Comm ...
-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
-    + FullyQualifiedErrorId : NativeCommandError
- 
+
 BUILD FAILED
-C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp\build.xml:7: Execute failed: java.io.IOException: Cannot run program "mvn" (in directory 
-"C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp"): CreateProcess error=2, El sistema no puede encontrar el archivo especificado
+C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp\build.xml:8: Execute failed: java.io.IOException: Cannot run program "${env.MVN_CMD}" (in directory "C:\ProgramData\Jenkins\.jenkins\workspace\test-pipeline\repo-temp\microservice_pipeline_test"): CreateProcess error=2, El sistema no puede encontrar el archivo especificado
 -------------------------
 
 pipeline {
