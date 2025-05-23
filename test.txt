@@ -65,4 +65,66 @@ Pipeline: pipeline {
 
 
 
-What i Need to do: 
+-----------------------------------
+
+pipeline {
+    agent any
+
+    parameters {
+        file(name: 'inputFile', description: 'Archivo .txt que se imprimirá durante la build')
+    }
+
+    environment {
+        REPO_URL = 'https://github.com/TU_USUARIO/TU_REPO.git'
+        BRANCH = 'main'
+        ARCHIVO = 'test.txt'
+    }
+
+    stages {
+
+        stage('Preparar Workspace') {
+            steps {
+                script {
+                    powershell '''
+                        if (Test-Path -Path repo-temp) {
+                            Remove-Item -Recurse -Force repo-temp
+                        }
+                        mkdir repo-temp
+                    '''
+                }
+            }
+        }
+
+        stage('Clonar repositorio') {
+            steps {
+                dir('repo-temp') {
+                    git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
+                }
+            }
+        }
+
+        stage('Mostrar archivo del repo') {
+            steps {
+                powershell 'Get-Content .\\repo-temp\\' + ARCHIVO
+            }
+        }
+
+        stage('Mostrar archivo input') {
+            steps {
+                withFileParameter('inputFile') {
+                    powershell 'Get-Content "$env:inputFile"'
+                }
+            }
+        }
+
+        stage('Compilar con Ant') {
+            steps {
+                withFileParameter('inputFile') {
+                    dir('repo-temp') {
+                        powershell 'ant -Dinput.file="$env:inputFile"'
+                    }
+                }
+            }
+        }
+    }
+}
