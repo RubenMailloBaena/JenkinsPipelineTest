@@ -2,7 +2,7 @@
 
     <!-- Ruta del archivo input -->
     <property name="input.file" value="input.txt"/>
-    <property enviroment="env"/>
+    <property environment="env"/>
 
     <target name="clean">
         <exec executable="${env.MVN_CMD}" dir="microservice_pipeline_test">
