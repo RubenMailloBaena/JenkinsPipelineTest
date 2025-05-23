@@ -1,0 +1,25 @@
+<project name="spring-boot-service" default="build" basedir=".">
+
+    <!-- Ruta del archivo input -->
+    <property name="input.file" value="input.txt"/>
+
+    <target name="clean">
+        <exec executable="mvn">
+            <arg value="clean"/>
+        </exec>
+    </target>
+
+    <target name="compile">
+        <exec executable="mvn">
+            <arg value="package"/>
+        </exec>
+    </target>
+
+    <target name="print-file">
+        <echo>Contenido del archivo: ${input.file}</echo>
+        <loadfile property="input.content" srcFile="${input.file}"/>
+        <echo>${input.content}</echo>
+    </target>
+
+    <target name="build" depends="clean, compile, print-file"/>
+</project>
