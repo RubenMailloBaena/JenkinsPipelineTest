@@ -6,6 +6,8 @@ import java.io.FileWriter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+//Documentation: https://zetcode.com/java/dom/
+
 public class XMLToJavaConverter{
     public static void main(String[] args){ //en el arg0 entra el XML y en el arg1 el path de salida del .java
         try{
