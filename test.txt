@@ -9,6 +9,7 @@ pipeline {
         REPO_URL = 'https://github.com/RubenMailloBaena/JenkinsPipelineTest.git'
         BRANCH = 'main'
         ANT_DIR = 'repo-temp/ant_files'
+        VALID_FORMATS = '.txt,.xml'
     }
 
     stages {
@@ -17,17 +18,18 @@ pipeline {
                 withFileParameter('inputFile'){
                     powershell '''
                         $input = "$env:inputFile"
-                        $filename = "$env:inputFile_FILENAME"
                         $length = (Get-Item $input).Length
+                        $filename = "$env:inputFile_FILENAME"
+                        $ext = [System.IO.Path]::GetExtension($filename).ToLower()
                         
                         if($length -eq 0){
                             Write-Host "[ERROR]: The file content can't be empty: $input"
                             exit 1
                         }
                         
-                        $ext = [System.IO.Path]::GetExtension($filename).ToLower()
-                        if($ext -ne ".txt" -and $ext -ne ".xml"){
-                            Write-Host "[ERROR]: Invalid file format: $ext --> only .txt or .xml"
+                        $validExts = "$env:VALID_FORMATS".Split(',')
+                        if(-not $validExts.Contains($ext)){
+                            Write-Host "[ERROR]: Invalid file format: $ext --> allowed formats: $validExts"
                             exit 1
                         }
                         
@@ -80,96 +82,3 @@ pipeline {
     }
 }
 
-
------------------------------------------------
-
-
-pipeline {
-    agent any
-
-    // 🔧 CONFIGURACIÓN
-    environment {
-        REPO_URL = 'https://github.com/RubenMailloBaena/JenkinsPipelineTest.git'
-        BRANCH = 'main'
-        ANT_DIR = 'repo-temp/ant_files'
-        FILE_PARAM_NAME = 'inputFile'
-        VALID_FORMATS = '.txt,.xml'
-    }
-
-    parameters {
-        base64File(name: "${FILE_PARAM_NAME}", description: 'Archivo de entrada (.txt o .xml)')
-    }
-
-    stages {
-        stage('Validar archivo de entrada') {
-            steps {
-                script {
-                    def fileParam = env.FILE_PARAM_NAME
-                    def validExts = env.VALID_FORMATS.split(',')
-
-                    withFileParameter(fileParam) {
-                        powershell """
-                            \$input = \$env:${fileParam}
-                            \$filename = \$env:${fileParam}_FILENAME
-                            \$length = (Get-Item \$input).Length
-                            \$ext = [System.IO.Path]::GetExtension(\$filename).ToLower()
-
-                            if (\$length -eq 0) {
-                                Write-Host "[ERROR]: El archivo está vacío: \$filename"
-                                exit 1
-                            }
-
-                            \$validExts = "${env.VALID_FORMATS}".Split(',')
-                            if (-not \$validExts.Contains(\$ext)) {
-                                Write-Host "[ERROR]: Formato inválido: \$ext. Se permiten: \$validExts"
-                                exit 1
-                            }
-
-                            Write-Host "✔ Validación de archivo OK: \$filename"
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Preparar workspace') {
-            steps {
-                powershell '''
-                    if (Test-Path -Path repo-temp) {
-                        Remove-Item -Path repo-temp -Recurse -Force
-                    }
-                    mkdir repo-temp
-                '''
-            }
-        }
-
-        stage('Clonar repositorio') {
-            steps {
-                dir('repo-temp') {
-                    git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
-                }
-            }
-        }
-
-        stage('Compilar con Ant') {
-            steps {
-                script {
-                    def fileParam = env.FILE_PARAM_NAME
-                    def antHome = tool name: 'Ant Installation', type: 'hudson.tasks.Ant$AntInstallation'
-                    def mavenHome = tool name: 'Maven Installation', type: 'hudson.tasks.Maven$MavenInstallation'
-                    def mvnCmd = "${mavenHome}\\bin\\mvn.cmd"
-
-                    withFileParameter(fileParam) {
-                        dir(env.ANT_DIR) {
-                            bat """
-                                set INPUT_FILE=${inputFile}
-                                set MVN_CMD=${mvnCmd}
-                                "${antHome}\\bin\\ant.bat" -Dinput.file=%INPUT_FILE% -Dmvn.cmd=%MVN_CMD%
-                            """
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
