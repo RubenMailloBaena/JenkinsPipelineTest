@@ -11,6 +11,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 public class XMLToJavaConverter{
     public static void main(String[] args){ //en el arg0 entra el XML y en el arg1 el path de salida del .java
         try{
+            System.out.println("EXECUTING CONVERTER");
+
             //El primer argumento es el archivo XML
             String inputFilePath = args[0];
             File xmlFile = new File(inputFilePath);
