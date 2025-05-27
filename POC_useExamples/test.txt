@@ -84,71 +84,111 @@ pipeline {
 
 
 -----------------------------------
-// Método para generar la clase Java a partir del XML
-    private static String generateJavaClass(String className, Element rootElement) {
-        StringBuilder javaCode = new StringBuilder();
+pipeline {
+    agent any
+    
+    parameters{
+       base64File 'inputFile'
+    }
 
-        // Definir la clase Java
-        javaCode.append("public class ").append(className).append(" {\n");
+    environment {
+        REPO_URL = 'https://github.com/RubenMailloBaena/JenkinsPipelineTest.git'
+        BRANCH = 'main'
+        ANT_DIR = 'repo-temp/tools'
+        XML_DIR = 'repo-temp/resources/XML'
+        JAVA_DIR = 'repo-temp/resources/Java'
+        VALID_FORMATS = '.txt,.xml'
+    }
 
-        // Iterar sobre los elementos de <inputs> y generar campos para la clase Java
-        NodeList inputs = rootElement.getElementsByTagName("inputs");
-        if (inputs.getLength() > 0) {
-            Element inputElement = (Element) inputs.item(0);
-            NodeList inputParams = inputElement.getChildNodes();
-            for (int i = 0; i < inputParams.getLength(); i++) {
-                Node node = inputParams.item(i);
-                if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    Element element = (Element) node;
-                    String fieldName = element.getNodeName();
-                    javaCode.append("    private String ").append(fieldName).append(";\n");
-
-                    // Generar los métodos getter y setter para la variable
-                    javaCode.append("    public String get").append(capitalize(fieldName)).append("() {\n")
-                            .append("        return ").append(fieldName).append(";\n")
-                            .append("    }\n");
-
-                    javaCode.append("    public void set").append(capitalize(fieldName)).append("(String ").append(fieldName).append(") {\n")
-                            .append("        this.").append(fieldName).append(" = ").append(fieldName).append(";\n")
-                            .append("    }\n");
+    stages {
+        stage('Validating Input File'){
+            steps{
+                withFileParameter('inputFile'){
+                    powershell '''
+                        $input = "$env:inputFile"
+                        $length = (Get-Item $input).Length
+                        $filename = "$env:inputFile_FILENAME"
+                        $ext = [System.IO.Path]::GetExtension($filename).ToLower()
+                        
+                        if($length -eq 0){
+                            Write-Host "[ERROR]: The file content can't be empty: $input"
+                            exit 1
+                        }
+                        
+                        $validExts = "$env:VALID_FORMATS".Split(',')
+                        if(-not $validExts.Contains($ext)){
+                            Write-Host "[ERROR]: Invalid file format: $ext --> allowed formats: $validExts"
+                            exit 1
+                        }
+                        
+                        Write-Host "Input File Validated!"
+                    '''
+                }
+            }
+        }
+        
+        stage('Prepare Workspace') {
+            steps {
+                script {
+                    powershell '''
+                        if (Test-Path -Path repo-temp) {
+                            Remove-Item -Path repo-temp -Recurse -Force
+                        }
+                        mkdir repo-temp
+                    '''
                 }
             }
         }
 
-        // Iterar sobre los elementos de <outputs> y generar campos para la clase Java
-        NodeList outputs = rootElement.getElementsByTagName("outputs");
-        if (outputs.getLength() > 0) {
-            Element outputElement = (Element) outputs.item(0);
-            NodeList outputParams = outputElement.getChildNodes();
-            for (int i = 0; i < outputParams.getLength(); i++) {
-                Node node = outputParams.item(i);
-                if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    Element element = (Element) node;
-                    String fieldName = element.getNodeName();
-                    javaCode.append("    private String ").append(fieldName).append(";\n");
-
-                    // Generar los métodos getter y setter para la variable
-                    javaCode.append("    public String get").append(capitalize(fieldName)).append("() {\n")
-                            .append("        return ").append(fieldName).append(";\n")
-                            .append("    }\n");
-
-                    javaCode.append("    public void set").append(capitalize(fieldName)).append("(String ").append(fieldName).append(") {\n")
-                            .append("        this.").append(fieldName).append(" = ").append(fieldName).append(";\n")
-                            .append("    }\n");
+        stage('CLonar Repositorio') { 
+            steps {
+                dir('repo-temp'){
+                    git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
                 }
             }
         }
-
-        // Cerrar la clase
-        javaCode.append("}\n");
-
-        return javaCode.toString();
+        
+        stage('Convert XML to Java'){
+            steps{
+                withFileParameter('inputFile'){
+                    dir ('repo-temp/tools'){
+                       script{
+                            def filename = "${env.inputFile_FILENAME}"
+                            echo filename
+                            def inputFile = "$env:inputFile"
+                            def outputJavaFile = "${env.JAVA_DIR}/${filename}.java"
+                            
+                            bat """
+                                java XMLToJavaConverter ${inputFile} ${outputJavaFile}
+                            """
+                            echo "Java class generated: ${outputJavaFile}"
+                        } 
+                    }
+                }
+            }
+        }
+        
+        stage('Compilar con Ant task'){
+            steps{
+                withFileParameter('inputFile'){
+                    dir(env.ANT_DIR){
+                        script{
+                            def antHome = tool name: 'Ant Installation', type: 'hudson.tasks.Ant$AntInstallation'
+                            def mavenHome = tool name: 'Maven Installation', type: 'hudson.tasks.Maven$MavenInstallation'
+                            def mvnCmd = "${mavenHome}\\bin\\mvn.cmd"
+                            
+                            bat """
+                                set INPUT_FILE=${inputFile}
+                                set MVN_CMD=${mvnCmd}
+                                "${antHome}\\bin\\ant.bat" -Dinput.file=%INPUT_FILE% -Dmvn.cmd=%MVN_CMD%
+                            """
+                        }
+                    }
+                }
+            }
+        }
     }
+}
 
-    // Método para capitalizar el nombre de los campos
-    private static String capitalize(String str) {
-        if (str == null || str.isEmpty()) return str;
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
-    }
 
 
