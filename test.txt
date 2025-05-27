@@ -82,3 +82,73 @@ pipeline {
     }
 }
 
+
+-----------------------------------
+// Método para generar la clase Java a partir del XML
+    private static String generateJavaClass(String className, Element rootElement) {
+        StringBuilder javaCode = new StringBuilder();
+
+        // Definir la clase Java
+        javaCode.append("public class ").append(className).append(" {\n");
+
+        // Iterar sobre los elementos de <inputs> y generar campos para la clase Java
+        NodeList inputs = rootElement.getElementsByTagName("inputs");
+        if (inputs.getLength() > 0) {
+            Element inputElement = (Element) inputs.item(0);
+            NodeList inputParams = inputElement.getChildNodes();
+            for (int i = 0; i < inputParams.getLength(); i++) {
+                Node node = inputParams.item(i);
+                if (node.getNodeType() == Node.ELEMENT_NODE) {
+                    Element element = (Element) node;
+                    String fieldName = element.getNodeName();
+                    javaCode.append("    private String ").append(fieldName).append(";\n");
+
+                    // Generar los métodos getter y setter para la variable
+                    javaCode.append("    public String get").append(capitalize(fieldName)).append("() {\n")
+                            .append("        return ").append(fieldName).append(";\n")
+                            .append("    }\n");
+
+                    javaCode.append("    public void set").append(capitalize(fieldName)).append("(String ").append(fieldName).append(") {\n")
+                            .append("        this.").append(fieldName).append(" = ").append(fieldName).append(";\n")
+                            .append("    }\n");
+                }
+            }
+        }
+
+        // Iterar sobre los elementos de <outputs> y generar campos para la clase Java
+        NodeList outputs = rootElement.getElementsByTagName("outputs");
+        if (outputs.getLength() > 0) {
+            Element outputElement = (Element) outputs.item(0);
+            NodeList outputParams = outputElement.getChildNodes();
+            for (int i = 0; i < outputParams.getLength(); i++) {
+                Node node = outputParams.item(i);
+                if (node.getNodeType() == Node.ELEMENT_NODE) {
+                    Element element = (Element) node;
+                    String fieldName = element.getNodeName();
+                    javaCode.append("    private String ").append(fieldName).append(";\n");
+
+                    // Generar los métodos getter y setter para la variable
+                    javaCode.append("    public String get").append(capitalize(fieldName)).append("() {\n")
+                            .append("        return ").append(fieldName).append(";\n")
+                            .append("    }\n");
+
+                    javaCode.append("    public void set").append(capitalize(fieldName)).append("(String ").append(fieldName).append(") {\n")
+                            .append("        this.").append(fieldName).append(" = ").append(fieldName).append(";\n")
+                            .append("    }\n");
+                }
+            }
+        }
+
+        // Cerrar la clase
+        javaCode.append("}\n");
+
+        return javaCode.toString();
+    }
+
+    // Método para capitalizar el nombre de los campos
+    private static String capitalize(String str) {
+        if (str == null || str.isEmpty()) return str;
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+
