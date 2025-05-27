@@ -1,0 +1,81 @@
+pipeline {
+    agent any
+    
+    parameters{
+       base64File 'inputFile'
+    }
+
+    environment {
+        REPO_URL = 'https://github.com/RubenMailloBaena/JenkinsPipelineTest.git'
+        BRANCH = 'main'
+        ANT_DIR = 'repo-temp/ant_files'
+    }
+
+    stages {
+        stage('Validating Input File'){
+            steps{
+                withFileParameter('inputFile'){
+                    powershell '''
+                        $input = "$env:inputFile"
+                        $filename = "$env:inputFile_FILENAME"
+                        $length = (Get-Item $input).Length
+                        
+                        if($length -eq 0){
+                            Write-Host "[ERROR]: The file content can't be empty: $input"
+                            exit 1
+                        }
+                        
+                        $ext = [System.IO.Path]::GetExtension($filename).ToLower()
+                        if($ext -ne ".txt" -and $ext -ne ".xml"){
+                            Write-Host "[ERROR]: Invalid file format: $ext --> only .txt or .xml"
+                            exit 1
+                        }
+                        
+                        Write-Host "Input File Validated!"
+                    '''
+                }
+            }
+        }
+        
+        stage('Prepare Workspace') {
+            steps {
+                script {
+                    powershell '''
+                        if (Test-Path -Path repo-temp) {
+                            Remove-Item -Path repo-temp -Recurse -Force
+                        }
+                        mkdir repo-temp
+                    '''
+                }
+            }
+        }
+
+        stage('CLonar Repositorio') { 
+            steps {
+                dir('repo-temp'){
+                    git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
+                }
+            }
+        }
+        
+        stage('Compilar con Ant task'){
+            steps{
+                withFileParameter('inputFile'){
+                    dir(env.ANT_DIR){
+                        script{
+                            def antHome = tool name: 'Ant Installation', type: 'hudson.tasks.Ant$AntInstallation'
+                            def mavenHome = tool name: 'Maven Installation', type: 'hudson.tasks.Maven$MavenInstallation'
+                            def mvnCmd = "${mavenHome}\\bin\\mvn.cmd"
+                            
+                            bat """
+                                set INPUT_FILE=${inputFile}
+                                set MVN_CMD=${mvnCmd}
+                                "${antHome}\\bin\\ant.bat" -Dinput.file=%INPUT_FILE% -Dmvn.cmd=%MVN_CMD%
+                            """
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
