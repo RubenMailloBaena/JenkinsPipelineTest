@@ -13,7 +13,7 @@ public class XMLToJavaConverter{
         try{
             String inputFilePath = args[0];
             File xmlFile = new File(inputFilePath);
-            System.out.println(args[2] + " " + xmlFile.getName());
+            System.out.println(args[2] + " " + args[1] + " " + xmlFile.getName());
             //TODO: GUARDAR EL ARCHIVO XML EN LA CARPETA CORRESPONDIENTE
 
             //Cargamos el XML usando DOM
