@@ -72,7 +72,7 @@ public class XMLToJavaConverter{
                         //getter
                         functionsResult += "\n\tpublic String get" + UpperFirstLetter(nodeName) + "(){\n"
                         + "\t\treturn " + nodeName + ";\n"
-                        + "}\n";
+                        + "\t}\n";
 
                         //setter
                         functionsResult += "\n\tpublic void set" + UpperFirstLetter(nodeName) + "(String " + nodeName +"){\n"
