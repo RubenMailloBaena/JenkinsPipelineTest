@@ -9,7 +9,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 //Documentation: https://zetcode.com/java/dom/
 
 public class XMLToJavaConverter{
-    public static void main(String[] args){ //en el arg0 entra el XML y en el arg1 el path de salida del .java
+    public static void main(String[] args){ //en el arg0 entra el XML y en el arg1 el path de salida del .java y el arg2 donde queremos mover el input XML
         try{
             String inputFilePath = args[0];
             File xmlFile = new File(inputFilePath);
