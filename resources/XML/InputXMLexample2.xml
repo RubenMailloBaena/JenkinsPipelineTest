@@ -1,0 +1,10 @@
+<animal>
+    <inputs>
+        <param1> Valor1 </param1>
+        <param2> Im a dog </param2>
+    </inputs>
+    <outputs>
+        <result1> Result1 </result1>
+        <result2> Result1 </result2>
+    </outputs>
+</animal>
