@@ -14,7 +14,6 @@ public class XMLToJavaConverter{
             String inputFilePath = args[0];
             File xmlFile = new File(inputFilePath);
             System.out.println(args[2] + " " + args[1] + " " + xmlFile.getName());
-            //TODO: GUARDAR EL ARCHIVO XML EN LA CARPETA CORRESPONDIENTE
 
             //Cargamos el XML usando DOM
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -30,6 +29,9 @@ public class XMLToJavaConverter{
             FileWriter writer = new FileWriter(outputJavaFile);
             writer.write(javaClassContent);
             writer.close();
+
+            //Movemos el archivo XML a su carpeta correspondiente
+            xmlFile.renameTo(new File(args[2]));
         }
         catch(Exception e){
             e.printStackTrace();
