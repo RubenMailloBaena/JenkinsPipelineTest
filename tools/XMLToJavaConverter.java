@@ -11,8 +11,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 public class XMLToJavaConverter{
     public static void main(String[] args){ //en el arg0 entra el XML y en el arg1 el path de salida del .java
         try{
-            System.out.println("EXECUTING CONVERTER");
-
             //El primer argumento es el archivo XML
             String inputFilePath = args[0];
             File xmlFile = new File(inputFilePath);
@@ -26,8 +24,6 @@ public class XMLToJavaConverter{
             Element rootElement = document.getDocumentElement();
             String className = rootElement.getNodeName();
 
-            System.out.println("EXECUTING CONVERTER");
-
             //Creamos el archivo Java
             String javaClassContent = generateJavaClass(className, rootElement);
 
@@ -36,8 +32,6 @@ public class XMLToJavaConverter{
             FileWriter writer = new FileWriter(outputJavaFile);
             writer.write(javaClassContent);
             writer.close();
-
-            System.out.println("Classe Java Generada: " + outputJavaFile);
         }
         catch(Exception e){
             e.printStackTrace();
