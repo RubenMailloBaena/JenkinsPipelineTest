@@ -1,6 +1,10 @@
 <animal>
     <input>
-        <param1> Valor1 </param1>
+        <param1> 
+            Valor1 
+            VALOR 2
+            <extraChild> EXTRA </extraChild>
+        </param1>
         <param2> Valor2 </param2>
     </input>
     <output>
