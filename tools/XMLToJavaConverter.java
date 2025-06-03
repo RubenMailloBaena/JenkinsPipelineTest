@@ -127,12 +127,13 @@ public class XMLToJavaConverter{
         return false;
     }
 
-    private static boolean isValidAttribute(Node node){
-        System.out.println(node.getNodeName());
-        System.out.println(node.getChildNodes().getLength());
-        if(node.getChildNodes().getLength() != 0)
-            System.out.println(node.getChildNodes().item(0));
-        return Character.isLetter(node.getNodeName().charAt(0));
+    private static boolean isValidAttribute(Node node) throws InvalidXMLException{
+        if(Character.isLetter(node.getNodeName().charAt(0))){
+            if(node.getChildNodes().getLength() != 1) //VALIDAMOS QUE LOS ATRIBUTOS SOLO TENGAN UN SOLO HIJO
+                throw new InvalidXMLException("[ERROR]: Attributes can't have more than one child or be empty! --> " + node.getNodeName());
+            return true;
+        }
+        return false;
     }
 
     private static String UpperFirstLetter(String word){
