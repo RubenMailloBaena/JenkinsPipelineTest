@@ -52,7 +52,6 @@ public class XMLToJavaConverter{
         String className = rootElement.getNodeName();
         result.append("public class " + UpperFirstLetter(className) + "{\n\n");
 
-        //GET ATTRIBUTES
         NodeList regionsList = rootElement.getChildNodes();
         NodeList attributesList;
         String attributesResult = "";

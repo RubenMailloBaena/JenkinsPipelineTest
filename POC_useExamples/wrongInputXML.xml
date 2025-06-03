@@ -4,7 +4,7 @@
         <param2> Valor2 </param2>
     </input>
     <output>
-        <result1> Result1  Valor2</result1>
+        <result1> Result2 </result1>
         <result2> Result1 </result2>
     </output>
 </animal>
