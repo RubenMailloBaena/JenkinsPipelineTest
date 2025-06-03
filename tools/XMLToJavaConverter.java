@@ -9,6 +9,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 //Documentation: https://zetcode.com/java/dom/
 
 public class XMLToJavaConverter{
+
+    private String[] permitedLabels = {"input", "output"};
+
     public static void main(String[] args){ //en el arg0 entra el XML y en el arg1 el path de salida del .java y el arg2 donde queremos mover el input XML
         try{
             String inputFilePath = args[0];
@@ -33,9 +36,7 @@ public class XMLToJavaConverter{
             xmlFile.renameTo(new File(args[2]));
         }
         catch(Exception e){
-            System.out.println("IN HERE; FIRST CATCH");
             e.printStackTrace();
-
             System.exit(1);
         }
     }
@@ -59,6 +60,8 @@ public class XMLToJavaConverter{
         for(int i=0; i<regionsList.getLength(); i++){
 
             Node node = regionsList.item(i);
+            System.out.println(node.getNodeName());
+
             if(isValidNode(node)){
 
                 attributesList = node.getChildNodes();
