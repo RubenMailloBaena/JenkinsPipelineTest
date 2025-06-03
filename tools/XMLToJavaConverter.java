@@ -129,7 +129,7 @@ public class XMLToJavaConverter{
 
     private static boolean isValidAttribute(Node node){
         System.out.println(node.getNodeName());
-        System.out.println(node.getChildNodes().getLength() == 0);
+        System.out.println(node.getChildNodes().getLength());
         return Character.isLetter(node.getNodeName().charAt(0));
     }
 
