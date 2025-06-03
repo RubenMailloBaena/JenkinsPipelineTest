@@ -83,7 +83,6 @@ public class XMLToJavaConverter{
                         + "\t\tthis." + nodeName + " = " + nodeName + ";\n"
                         + "\t}\n\n";
                     }
-                    throw new InvalidXMLException("TEST EXCEPTION");
                 }
             }
         }
