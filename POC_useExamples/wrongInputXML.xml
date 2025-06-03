@@ -1,12 +1,12 @@
 <animal>
-    <inputs>
+    <input>
         <param1> Valor1 </param1>
         <param2> Valor2 </param2>
-    </inputs>
-    <outputs>
+    </input>
+    <output>
         <result1> Result1 </result1>
         <result2> Result1 </result2>
-    </outputs>
+    </output>
     <extraRegion>
         <extra1> EXTRA1 </extra1>
         <extra2> extra2 </extra2>
