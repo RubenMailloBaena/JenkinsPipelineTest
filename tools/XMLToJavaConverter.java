@@ -33,12 +33,15 @@ public class XMLToJavaConverter{
             xmlFile.renameTo(new File(args[2]));
         }
         catch(Exception e){
+            System.out.println("IN HERE; FIRST CATCH");
             e.printStackTrace();
+
+            System.exit(1);
         }
     }
 
     // Método para generar la clase Java a partir del XML
-    private static String generateJavaClass(Element rootElement) {
+    private static String generateJavaClass(Element rootElement) throws InvalidXMLException{
 
         StringBuilder result = new StringBuilder();
 
@@ -99,4 +102,11 @@ public class XMLToJavaConverter{
         String c1 = word.substring(0,1).toUpperCase();
         return c1 + word.substring(1);
     }    
+
+    private static class InvalidXMLException extends Exception{
+        public InvalidXMLException(String message){
+            super(message);
+        }
+    }
 }
+
