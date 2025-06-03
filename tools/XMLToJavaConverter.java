@@ -10,7 +10,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 public class XMLToJavaConverter{
 
-    private String[] permitedLabels = {"input", "output"};
+    //EL STRING DE INPUT DEBE ESTAR SIEMPRE EN PRIMERA POSICION PARA VALIDAR QUE TIENE UNA REGION DE INPUT OBLIGATORIA
+    private static String[] permittedLabels = {"input", "output"};
+    private static boolean hasInputLabel = false;
 
     public static void main(String[] args){ //en el arg0 entra el XML y en el arg1 el path de salida del .java y el arg2 donde queremos mover el input XML
         try{
@@ -60,16 +62,16 @@ public class XMLToJavaConverter{
         for(int i=0; i<regionsList.getLength(); i++){
 
             Node node = regionsList.item(i);
-            System.out.println(node.getNodeName());
 
-            if(isValidNode(node)){
+            if(isValidRegion(node.getNodeName())){
 
                 attributesList = node.getChildNodes();
                 //BUCLE DE ATTRIBUTOS
                 for(int j=0; j<attributesList.getLength(); j++){
 
                     node = attributesList.item(j);
-                    if(isValidNode(node)){ //POR DEFECTO SERAN STRINGS
+
+                    if(isValidAttribute(node)){ //POR DEFECTO SERAN STRINGS
 
                         String nodeName = node.getNodeName();
                         
@@ -89,13 +91,43 @@ public class XMLToJavaConverter{
                 }
             }
         }
+
+        //COMPROBAMOS QUE TENEMOS EL LABEL DE INPUT NECESARIO
+        checkIfHasInputField();
+
         result.append(attributesResult);
         result.append(functionsResult);
         result.append("}");
         return result.toString();
     }
 
-    private static boolean isValidNode(Node node){
+    private static void checkIfHasInputField() throws InvalidXMLException{
+        if(!hasInputLabel)
+            throw new InvalidXMLException("[ERROR]: The input .xml does not contain an '" + permittedLabels[0] + "' region/field");
+    }
+
+    private static boolean isValidRegion(String nodeName) throws InvalidXMLException{
+        if(Character.isLetter(nodeName.charAt(0))){
+            if(isPermittedLabel(nodeName))
+                return true;
+            else
+                throw new InvalidXMLException("[ERROR]: Contains an invalid region name --> " + nodeName);
+        }
+        return false;
+    }
+
+    private static boolean isPermittedLabel(String name){
+        for(String permitted : permittedLabels){
+            if(permitted.equals(name)){ //ESTA DENTRO DE LOS NOMBRES PERMITIDOS
+                if(permittedLabels[0].equals(name)) //TENEMOS LA REGION OBLIGATORIA DE INPUTS
+                    hasInputLabel = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isValidAttribute(Node node){
         return Character.isLetter(node.getNodeName().charAt(0));
     }
 
