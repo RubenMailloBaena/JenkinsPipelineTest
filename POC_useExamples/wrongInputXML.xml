@@ -7,8 +7,4 @@
         <result1> Result1 </result1>
         <result2> Result1 </result2>
     </output>
-    <extraRegion>
-        <extra1> EXTRA1 </extra1>
-        <extra2> extra2 </extra2>
-    </extraRegion>
 </animal>
