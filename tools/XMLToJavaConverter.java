@@ -76,7 +76,7 @@ public class XMLToJavaConverter{
         String variablesResult = "";
         String functionsResult = "";
 
-        //BUCLE DE REGIONES
+        //BUCLE DE REGIONES (INPUT / OUTPUT)
         for(int i=0; i<regionsList.getLength(); i++){
 
             Node node = regionsList.item(i);
@@ -84,26 +84,28 @@ public class XMLToJavaConverter{
             if(isValidRegion(node.getNodeName())){
 
                 variablesList = node.getChildNodes();
-                //BUCLE DE VARIABLES
+
+                //BUCLE DE VARIABLES (PARAM1 / RESULT2)
                 for(int j=0; j<variablesList.getLength(); j++){
 
                     node = variablesList.item(j);
 
-                    if(isValidVariable(node)){ //POR DEFECTO SERAN STRINGS
+                    if(isValidVariable(node)){ 
 
                         //VALIDAMOS QUE EL EL ATRIBUTO Y LA VARAIBLE SON CORRECTOS; Y MAPEAMOS EL NOMBRE
                         String varType = mapVariableTypes(isValidVariableType(node));
                         String nodeName = node.getNodeName();
                         
-                        //attribute
+                        //attribute (ej. private String param1)
                         variablesResult += "\tprivate " + varType + " " + nodeName;
 
+                        //attribute value (ej. = "Valor1";) Si es String añadimos comillas.
                         if(lastTypeWasString)
                             variablesResult += " = \"" + node.getTextContent().replace(" ","") + "\";\n";
                         else
                             variablesResult += " = " + node.getTextContent().replace(" ","") + ";\n";
 
-                        //getter
+                        //getter 
                         functionsResult += "\n\tpublic " + varType + " get" + UpperFirstLetter(nodeName) + "(){\n"
                         + "\t\treturn " + nodeName + ";\n"
                         + "\t}\n";
@@ -126,11 +128,13 @@ public class XMLToJavaConverter{
         return result.toString();
     }
 
+    //VALIDAMOS QUE TENEMOS LA REGION INPUT
     private static void checkIfHasInputField() throws InvalidXMLException{
         if(!hasInputRegion)
             throw new InvalidXMLException("[ERROR]: The input .xml does not contain an '" + permittedLabels[0] + "' region/field");
     }
 
+    //VALIDAMOS QUE LA REGION ESTE BIEN ESCRITA Y SI ES EL INPUT, QUE ES OBLIGATORIO
     private static boolean isValidRegion(String nodeName) throws InvalidXMLException{
         if(Character.isLetter(nodeName.charAt(0))){
             if(!isPermitted(nodeName, permittedLabels, true, true)) //ESTA DENTRO DE LOS NOMBRES PERMITIDOS
@@ -140,6 +144,7 @@ public class XMLToJavaConverter{
         return false;
     }
     
+    //VALIDAMOS QUE LA VARAIBLE Y ATRIBUTO DEL XML SEA CORRECTO
     private static boolean isValidVariable(Node node) throws InvalidXMLException{
         if(Character.isLetter(node.getNodeName().charAt(0))){
 
@@ -154,6 +159,7 @@ public class XMLToJavaConverter{
         return false;
     }
 
+    //VALIDAMOS QUE ES UN TIPO DE VARIABLE QUE EXISTE
     private static String isValidVariableType(Node node) throws InvalidXMLException{
         
         String attributeName = node.getAttributes().item(0).getNodeName();
@@ -167,7 +173,9 @@ public class XMLToJavaConverter{
                 
         return varType.toLowerCase();
     }
-                                                                                    //Comprueba si esta la region de input obligatoria
+
+    //VALIDAMOS SI LOS NOMBRES ESTAN DENTRO DE LA COLECCION INDICADA, SI VENIMOS DE LAS REGIONES; PODEMOS VALIDAR SI ESTA EL INPUT OBLIGATORIO
+    //Y TENEMOS OTRO BOOL PARA INDICAR SI DEBEMOS ESCRIBIR TODO IGUAL, O SI PODEMOS IGNORAR LAS MAYUSCULAS.
     private static boolean isPermitted(String inputName, String[] permittedCollection, boolean capsSensitive, boolean checkForInputRegion) {
         
         if (checkForInputRegion && !hasInputRegion) {
@@ -188,6 +196,7 @@ public class XMLToJavaConverter{
         return false; 
     }
 
+    //MAPEAMOS LOS NOMBRES DE LOS TIPOS DE VARIABLES (de string a String, de integer a int, etc)
     private static String mapVariableTypes(String varType){
 
         lastTypeWasString = false;
@@ -205,6 +214,7 @@ public class XMLToJavaConverter{
         }
     }
 
+    //PONEMOS EN MAYUSCULA LA PRIMERA LETRA DE LA PALABRA
     private static String UpperFirstLetter(String word){
         if(word.isBlank() || word.isEmpty()) return "";
 
@@ -212,6 +222,7 @@ public class XMLToJavaConverter{
         return c1 + word.substring(1);
     }    
 
+    //EXCEPCION PARA XML INVALIDOS
     private static class InvalidXMLException extends Exception{
         public InvalidXMLException(String message){
             super(message);
