@@ -160,7 +160,7 @@ public class XMLToJavaConverter{
         String varType = node.getAttributes().item(0).getTextContent();
 
         if(isPermitted(attributeName, permittedAttributes, true, false)){ //ATRIBUTO QUE EXISTE
-            if(isPermitted(varType, permitedVarTypes, false, false)) //TIPO DE VARIABLE QUE EXISTE
+            if(isPermitted(varType, permitedVarTypes, true, false)) //TIPO DE VARIABLE QUE EXISTE
                 return varType.toLowerCase();
             else
                 throw new InvalidXMLException("[ERROR]: Invalid variable type: --> " + varType);
