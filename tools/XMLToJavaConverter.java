@@ -27,6 +27,12 @@ public class XMLToJavaConverter{
     private static final int MAX_VARIABLE_CHILDS = 1;
 
     public static void main(String[] args){ //en el arg0 entra el XML y en el arg1 el path de salida del .java y el arg2 donde queremos mover el input XML
+        
+        if (args.length < 3) {
+            System.err.println("Usage: XMLToJavaConverter <input XML path> <output Java path> <move XML path>");
+            System.exit(1);
+        }
+
         try{
             String inputFilePath = args[0];
             File xmlFile = new File(inputFilePath);
