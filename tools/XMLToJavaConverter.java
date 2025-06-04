@@ -163,10 +163,11 @@ public class XMLToJavaConverter{
     private static String isValidVariableType(Node node) throws InvalidXMLException{
         
         String attributeName = node.getAttributes().item(0).getNodeName();
-        String varType = node.getAttributes().getNamedItem(attributeName).getTextContent();
 
         if(!isPermitted(attributeName, permittedAttributes, true, false)) //ATRIBUTO QUE EXISTE
             throw new InvalidXMLException("[ERROR]: Invalid attribute name: --> " + attributeName);
+
+        String varType = node.getAttributes().getNamedItem(attributeName).getTextContent();
 
         if(!isPermitted(varType, permitedVarTypes, true, false)) //TIPO DE VARIABLE QUE EXISTE
             throw new InvalidXMLException("[ERROR]: Invalid variable type: --> " + varType);
