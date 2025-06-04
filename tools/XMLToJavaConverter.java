@@ -159,14 +159,13 @@ public class XMLToJavaConverter{
         String attributeName = node.getAttributes().item(0).getNodeName();
         String varType = node.getAttributes().item(0).getTextContent();
 
-        if(isPermitted(attributeName, permittedAttributes, true, false)){ //ATRIBUTO QUE EXISTE
-            if(isPermitted(varType, permitedVarTypes, true, false)) //TIPO DE VARIABLE QUE EXISTE
-                return varType.toLowerCase();
-            else
-                throw new InvalidXMLException("[ERROR]: Invalid variable type: --> " + varType);
-        }
-        else
+        if(!isPermitted(attributeName, permittedAttributes, true, false)) //ATRIBUTO QUE EXISTE
             throw new InvalidXMLException("[ERROR]: Invalid attribute name: --> " + attributeName);
+
+        if(!isPermitted(varType, permitedVarTypes, true, false)) //TIPO DE VARIABLE QUE EXISTE
+            throw new InvalidXMLException("[ERROR]: Invalid variable type: --> " + varType);
+                
+        return varType.toLowerCase();
     }
                                                                                     //Comprueba si esta la region de input obligatoria
     private static boolean isPermitted(String inputName, String[] permittedCollection, boolean capsSensitive, boolean checkForInputRegion) {
