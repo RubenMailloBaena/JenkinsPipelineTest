@@ -12,7 +12,19 @@ public class XMLToJavaConverter{
 
     //EL STRING DE INPUT DEBE ESTAR SIEMPRE EN PRIMERA POSICION PARA VALIDAR QUE TIENE UNA REGION DE INPUT OBLIGATORIA
     private static String[] permittedLabels = {"input", "output"};
+
+    //pos 1. Nombre del atributo que indica el tipo de varaible
+    //pos 2. ---
+    private static String[] permittedAttributes = {"varType"};
+
+    //WRITE IN LOWER CASE
+    private static String[] permitedVarTypes = {"string", "boolean", "integer", "float", "double"};
+
     private static boolean hasInputLabel = false;
+    private static boolean lastTypeWasString = false;
+
+    private static final int MAX_VARIABLE_ATTRIBUTES = 1;
+    private static final int MAX_VARIABLE_CHILDS = 1;
 
     public static void main(String[] args){ //en el arg0 entra el XML y en el arg1 el path de salida del .java y el arg2 donde queremos mover el input XML
         try{
@@ -53,8 +65,8 @@ public class XMLToJavaConverter{
         result.append("public class " + UpperFirstLetter(className) + "{\n\n");
 
         NodeList regionsList = rootElement.getChildNodes();
-        NodeList attributesList;
-        String attributesResult = "";
+        NodeList variablesList;
+        String variablesResult = "";
         String functionsResult = "";
 
         //BUCLE DE REGIONES
@@ -64,26 +76,33 @@ public class XMLToJavaConverter{
 
             if(isValidRegion(node.getNodeName())){
 
-                attributesList = node.getChildNodes();
-                //BUCLE DE ATTRIBUTOS
-                for(int j=0; j<attributesList.getLength(); j++){
+                variablesList = node.getChildNodes();
+                //BUCLE DE VARIABLES
+                for(int j=0; j<variablesList.getLength(); j++){
 
-                    node = attributesList.item(j);
+                    node = variablesList.item(j);
 
-                    if(isValidAttribute(node)){ //POR DEFECTO SERAN STRINGS
+                    if(isValidVariable(node)){ //POR DEFECTO SERAN STRINGS
 
+                        //VALIDAMOS QUE EL EL ATRIBUTO Y LA VARAIBLE SON CORRECTOS; Y MAPEAMOS EL NOMBRE
+                        String varType = mapVariableTypes(isValidVariableType(node));
                         String nodeName = node.getNodeName();
                         
                         //attribute
-                        attributesResult += "\tprivate String " + nodeName + " = \"" + node.getTextContent().replace(" ","") + "\";\n";
+                        variablesResult += "\tprivate " + varType + " " + nodeName;
+
+                        if(lastTypeWasString)
+                            variablesResult += " = \"" + node.getTextContent().replace(" ","") + "\";\n";
+                        else
+                            variablesResult += " = " + node.getTextContent().replace(" ","") + ";\n";
 
                         //getter
-                        functionsResult += "\n\tpublic String get" + UpperFirstLetter(nodeName) + "(){\n"
+                        functionsResult += "\n\tpublic " + varType + " get" + UpperFirstLetter(nodeName) + "(){\n"
                         + "\t\treturn " + nodeName + ";\n"
                         + "\t}\n";
 
                         //setter
-                        functionsResult += "\n\tpublic void set" + UpperFirstLetter(nodeName) + "(String " + nodeName +"){\n"
+                        functionsResult += "\n\tpublic void set" + UpperFirstLetter(nodeName) + "(" + varType + " " + nodeName +"){\n"
                         + "\t\tthis." + nodeName + " = " + nodeName + ";\n"
                         + "\t}\n\n";
                     }
@@ -94,7 +113,7 @@ public class XMLToJavaConverter{
         //COMPROBAMOS QUE TENEMOS EL LABEL DE INPUT NECESARIO
         checkIfHasInputField();
 
-        result.append(attributesResult);
+        result.append(variablesResult);
         result.append(functionsResult);
         result.append("}");
         return result.toString();
@@ -107,32 +126,79 @@ public class XMLToJavaConverter{
 
     private static boolean isValidRegion(String nodeName) throws InvalidXMLException{
         if(Character.isLetter(nodeName.charAt(0))){
-            if(isPermittedLabel(nodeName))
+            if(isPermitted(nodeName, permittedLabels, true, true)) //ESTA DENTRO DE LOS NOMBRES PERMITIDOS
                 return true;
             else
                 throw new InvalidXMLException("[ERROR]: Contains an invalid region name --> " + nodeName);
         }
         return false;
     }
+    
+    private static boolean isValidVariable(Node node) throws InvalidXMLException{
+        if(Character.isLetter(node.getNodeName().charAt(0))){
 
-    private static boolean isPermittedLabel(String name){
-        for(String permitted : permittedLabels){
-            if(permitted.equals(name)){ //ESTA DENTRO DE LOS NOMBRES PERMITIDOS
-                if(permittedLabels[0].equals(name)) //TENEMOS LA REGION OBLIGATORIA DE INPUTS
-                    hasInputLabel = true;
-                return true;
-            }
+            if(node.getChildNodes().getLength() != MAX_VARIABLE_CHILDS) //VALIDAMOS QUE LAS VARIABLES SOLO TENGAN UN SOLO HIJO
+                throw new InvalidXMLException("[ERROR]: Variables can't have more than " + MAX_VARIABLE_CHILDS +" childs or be empty! --> " + node.getNodeName());
+
+            if(node.getAttributes().getLength() != MAX_VARIABLE_ATTRIBUTES) //VALIDA QUE SOLO TENGAMOS UN ATTRIBUTO
+                throw new InvalidXMLException("[ERROR]: Variables can't have more than " + MAX_VARIABLE_ATTRIBUTES + " attributes or be empty! --> " + node.getNodeName());
+
+            return true;
         }
         return false;
     }
 
-    private static boolean isValidAttribute(Node node) throws InvalidXMLException{
-        if(Character.isLetter(node.getNodeName().charAt(0))){
-            if(node.getChildNodes().getLength() != 1) //VALIDAMOS QUE LOS ATRIBUTOS SOLO TENGAN UN SOLO HIJO
-                throw new InvalidXMLException("[ERROR]: Attributes can't have more than one child or be empty! --> " + node.getNodeName());
-            return true;
+    private static String isValidVariableType(Node node) throws InvalidXMLException{
+        
+        String attributeName = node.getAttributes().item(0).getNodeName();
+        String varType = node.getAttributes().item(0).getTextContent();
+
+        if(isPermitted(attributeName, permittedAttributes, true, false)){ //ATRIBUTO QUE EXISTE
+            if(isPermitted(varType, permitedVarTypes, false, false)) //TIPO DE VARIABLE QUE EXISTE
+                return varType.toLowerCase();
+            else
+                throw new InvalidXMLException("[ERROR]: Invalid variable type: --> " + varType);
         }
-        return false;
+        else
+            throw new InvalidXMLException("[ERROR]: Invalid attribute name: --> " + attributeName);
+    }
+                                                                                    //Comprueba si esta la region de input obligatoria
+    private static boolean isPermitted(String inputName, String[] permittedCollection, boolean capsSensitive, boolean checkForInputRegion) {
+        
+        if (checkForInputRegion && !hasInputLabel) {
+            String permittedLabel = permittedCollection[0];
+            hasInputLabel = capsSensitive ? permittedLabel.equals(inputName) : permittedLabel.equalsIgnoreCase(inputName);
+
+            if (hasInputLabel)
+                return true;
+        }
+
+        for (String permitted : permittedCollection) {
+            boolean isMatch = capsSensitive ? permitted.equals(inputName) : permitted.equalsIgnoreCase(inputName);
+            
+            if (isMatch)
+                return true; 
+        }
+
+        return false; 
+    }
+
+    private static String mapVariableTypes(String varType){
+
+        varType = varType.toLowerCase();
+        lastTypeWasString = false;
+
+        switch (varType) {
+            case "string":
+                lastTypeWasString = true;
+                return UpperFirstLetter(varType);
+
+            case "integer":
+                return "int";
+        
+            default:
+                return varType;
+        }
     }
 
     private static String UpperFirstLetter(String word){
