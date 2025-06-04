@@ -20,7 +20,7 @@ public class XMLToJavaConverter{
     //WRITE IN LOWER CASE
     private static String[] permitedVarTypes = {"string", "boolean", "integer", "float", "double"};
 
-    private static boolean hasInputLabel = false;
+    private static boolean hasInputRegion = false;
     private static boolean lastTypeWasString = false;
 
     private static final int MAX_VARIABLE_ATTRIBUTES = 1;
@@ -126,7 +126,7 @@ public class XMLToJavaConverter{
     }
 
     private static void checkIfHasInputField() throws InvalidXMLException{
-        if(!hasInputLabel)
+        if(!hasInputRegion)
             throw new InvalidXMLException("[ERROR]: The input .xml does not contain an '" + permittedLabels[0] + "' region/field");
     }
 
@@ -171,11 +171,11 @@ public class XMLToJavaConverter{
                                                                                     //Comprueba si esta la region de input obligatoria
     private static boolean isPermitted(String inputName, String[] permittedCollection, boolean capsSensitive, boolean checkForInputRegion) {
         
-        if (checkForInputRegion && !hasInputLabel) {
+        if (checkForInputRegion && !hasInputRegion) {
             String permittedLabel = permittedCollection[0];
-            hasInputLabel = capsSensitive ? permittedLabel.equals(inputName) : permittedLabel.equalsIgnoreCase(inputName);
+            hasInputRegion = capsSensitive ? permittedLabel.equals(inputName) : permittedLabel.equalsIgnoreCase(inputName);
 
-            if (hasInputLabel)
+            if (hasInputRegion)
                 return true;
         }
 
@@ -191,7 +191,6 @@ public class XMLToJavaConverter{
 
     private static String mapVariableTypes(String varType){
 
-        varType = varType.toLowerCase();
         lastTypeWasString = false;
 
         switch (varType) {
