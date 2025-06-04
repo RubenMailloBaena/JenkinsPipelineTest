@@ -17,7 +17,7 @@ public class XMLToJavaConverter{
     //pos 2. ---
     private static String[] permittedAttributes = {"varType"};
 
-    //WRITE IN LOWER CASE
+    //Escribir en Lower Case
     private static String[] permitedVarTypes = {"string", "boolean", "integer", "float", "double"};
 
     private static boolean hasInputRegion = false;
@@ -26,7 +26,8 @@ public class XMLToJavaConverter{
     private static final int MAX_VARIABLE_ATTRIBUTES = 1;
     private static final int MAX_VARIABLE_CHILDS = 1;
 
-    public static void main(String[] args){ //en el arg0 entra el XML y en el arg1 el path de salida del .java y el arg2 donde queremos mover el input XML
+    //en el arg0 entra el XML y en el arg1 el path de salida del .java y el arg2 donde queremos mover el input XML
+    public static void main(String[] args){ 
         
         if (args.length < 3) {
             System.err.println("Usage: XMLToJavaConverter <input XML path> <output Java path> <move XML path>");
@@ -132,10 +133,9 @@ public class XMLToJavaConverter{
 
     private static boolean isValidRegion(String nodeName) throws InvalidXMLException{
         if(Character.isLetter(nodeName.charAt(0))){
-            if(isPermitted(nodeName, permittedLabels, true, true)) //ESTA DENTRO DE LOS NOMBRES PERMITIDOS
-                return true;
-            else
+            if(!isPermitted(nodeName, permittedLabels, true, true)) //ESTA DENTRO DE LOS NOMBRES PERMITIDOS
                 throw new InvalidXMLException("[ERROR]: Contains an invalid region name --> " + nodeName);
+            return true;
         }
         return false;
     }
