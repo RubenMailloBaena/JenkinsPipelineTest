@@ -1,11 +1,11 @@
 <animal>
-    <input>
+    <inputs>
         <param1 varType="string"> Valor1 </param1>
         <param2 varType="boolean"> true </param2>
         <param3 varType="string"> Valor3--- </param3>
-    </input>
+    </inputs>
     <output>
-        <result1 varType="string"> Result2 </result1>
-        <result2 varType="integer"> 1234 </result2>
+        <result1 varrType="string"> Result2 </result1>
+        <result2 varType="booolean"> 1234 </result2>
     </output>
 </animal>
