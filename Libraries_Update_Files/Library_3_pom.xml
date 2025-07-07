@@ -6,7 +6,7 @@
     
     <groupId>com.example</groupId>
     <artifactId>my-app</artifactId>
-    <version>3.0.5</version> <!-- Esta es la versión que se actualizará -->
+    <version>3.0.6</version> <!-- Esta es la versión que se actualizará -->
     
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
