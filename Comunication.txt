@@ -1,0 +1,27 @@
+3: authmethod_lookup publickey
+debug3: remaining preferred: keyboard-interactive,password
+debug3: authmethod_is_enabled publickey
+debug1: Next authentication method: publickey
+debug1: Offering public key: C:\\Users\\rmaillob/.ssh/id_rsa RSA SHA256:JGP8jybR9SKt+1Yp3+2VTFIcFkL9CcZ/qXTykP+MV/k
+debug3: send packet: type 50
+debug2: we sent a publickey packet, wait for reply
+debug3: receive packet: type 51
+debug1: Authentications that can continue: publickey,password
+debug1: Trying private key: C:\\Users\\rmaillob/.ssh/id_ecdsa
+debug3: no such identity: C:\\Users\\rmaillob/.ssh/id_ecdsa: No such file or directory
+debug1: Trying private key: C:\\Users\\rmaillob/.ssh/id_ecdsa_sk
+debug3: no such identity: C:\\Users\\rmaillob/.ssh/id_ecdsa_sk: No such file or directory
+debug1: Trying private key: C:\\Users\\rmaillob/.ssh/id_ed25519
+debug3: no such identity: C:\\Users\\rmaillob/.ssh/id_ed25519: No such file or directory
+debug1: Trying private key: C:\\Users\\rmaillob/.ssh/id_ed25519_sk
+debug3: no such identity: C:\\Users\\rmaillob/.ssh/id_ed25519_sk: No such file or directory
+debug1: Trying private key: C:\\Users\\rmaillob/.ssh/id_xmss
+debug3: no such identity: C:\\Users\\rmaillob/.ssh/id_xmss: No such file or directory
+debug1: Trying private key: C:\\Users\\rmaillob/.ssh/id_dsa
+debug3: no such identity: C:\\Users\\rmaillob/.ssh/id_dsa: No such file or directory
+debug2: we did not send a packet, disable method
+debug3: authmethod_lookup password
+debug3: remaining preferred: ,password
+debug3: authmethod_is_enabled password
+debug1: Next authentication method: password
+vboxuser@192.168.1.163's password:
