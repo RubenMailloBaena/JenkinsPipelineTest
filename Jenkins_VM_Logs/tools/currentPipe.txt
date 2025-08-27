@@ -79,6 +79,10 @@ pipeline {
         VM_HOST = 'vboxuser' //USUARIO DE LA VM, PARA CONECTARNOS MEDIANTE SSH
         VM_IP = '172.20.10.10' //IP DE LA VM, SERVIDOR SSH
         LOGS_PATH = '/home/vboxuser/Desktop/NTT_LOGS/' //PATH A LOS LOGS DE LA VM
+        REPO_URL = 'https://github.com/RubenMailloBaena/JenkinsPipelineTest.git'
+        BRANCH = 'main' 
+        FILE_DIR = 'git-repo/Jenkins_VM_Logs/tools'
+        CONFIG_NAME = 'VM_config.txt'
     }
     
     stages {
@@ -93,6 +97,7 @@ pipeline {
                             Remove-Item -Path "$env:WP_NAME" -Recurse -Force
                         }
                         mkdir "$env:WP_NAME"
+                        mkdir "git-repo"
                     '''
                 }
             }
@@ -101,15 +106,38 @@ pipeline {
         //MEDIANTE SSH, NOS CONECTAMOS A LA VM. RECUPERAMOS TODOS LOS ARCHIVOS CON LOS LOGS.
         stage('Get logs from VM to WorkSpace') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'ssh', keyFileVariable: 'PK')]) {
-                    //Segun los filtros, recuperaremos solo los archivos necesarios. 
-                    //Si tenemos el filer all, recuperaremos de todas las carpetas. Si ademas buscamos archivos especificos, los filtraremos para solo recuperar los que queremos
-                    //Si no estamos filtrando todos, filtramos segun las carpetas/maquinas que hemos seleccionado para buscar.
-                    sh '''
+                script{
+                    withCredentials([sshUserPrivateKey(credentialsId: 'ssh', keyFileVariable: 'PK')]) {
+                    
+                        //TODO: CLONAR EL REPOSITORIO DE GIT CON EL ARCHIVO DE LAS VM.
+                        dir('git-repo'){
+                            git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
+                        }
+                        
+                        def configsFile = ''
+                        dir("${FILE_DIR}"){
+                            if(fileExists("${CONFIG_NAME}")){
+                                configsFile = readFile("${CONFIG_NAME}")
+                            }
+                            else{
+                                error "NO CONFIG FILE FOUND."
+                            }
+                        }
+                        
+                        echo "${configsFile}"
+                        def configs = configsFile.split('\\|').collect { it.trim() }
+                        echo "${configs}"
+                        
+                        
+                        //Segun los filtros, recuperaremos solo los archivos necesarios. 
+                        //Si tenemos el filer all, recuperaremos de todas las carpetas. Si ademas buscamos archivos especificos, los filtraremos para solo recuperar los que queremos
+                        //Si no estamos filtrando todos, filtramos segun las carpetas/maquinas que hemos seleccionado para buscar.
+                        sh '''
                         eval `ssh-agent -s`
                         trap "ssh-agent -k" EXIT
                         ssh-add "$PK"
         
+                        : << 'COMMENT'
                         if [ "$FILTER_ALL" = "true" ]; then
                             if [ -n "$FILE_NAME" ]; then
                                 scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH"Folder*/*"$FILE_NAME"* "$WP_NAME"/
@@ -126,7 +154,22 @@ pipeline {
                                 fi
                             done
                         fi
-                    '''
+                        
+                        COMMENT
+                        
+                        for i in 1 2 3 4 5
+                        do
+                            echo "Number: $i"
+                        done
+                       echo "${#configs[@]}"
+                        
+                        
+                        
+                        
+                        
+                        
+                        '''
+                    }
                 }
             }
         }
@@ -225,3 +268,4 @@ pipeline {
         }
     }
 }
+
