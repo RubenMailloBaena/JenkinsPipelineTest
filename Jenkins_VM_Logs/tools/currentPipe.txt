@@ -83,6 +83,7 @@ pipeline {
         BRANCH = 'main' 
         FILE_DIR = 'git-repo/Jenkins_VM_Logs/tools'
         CONFIG_NAME = 'VM_config.txt'
+        CONFIG_ARRAY = ''
     }
     
     stages {
@@ -108,8 +109,7 @@ pipeline {
             steps {
                 script{
                     withCredentials([sshUserPrivateKey(credentialsId: 'ssh', keyFileVariable: 'PK')]) {
-                    
-                        //TODO: CLONAR EL REPOSITORIO DE GIT CON EL ARCHIVO DE LAS VM.
+                        
                         dir('git-repo'){
                             git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
                         }
@@ -133,42 +133,28 @@ pipeline {
                         //Si tenemos el filer all, recuperaremos de todas las carpetas. Si ademas buscamos archivos especificos, los filtraremos para solo recuperar los que queremos
                         //Si no estamos filtrando todos, filtramos segun las carpetas/maquinas que hemos seleccionado para buscar.
                         sh '''
-                        eval `ssh-agent -s`
-                        trap "ssh-agent -k" EXIT
-                        ssh-add "$PK"
-        
-                        : << 'COMMENT'
-                        if [ "$FILTER_ALL" = "true" ]; then
-                            if [ -n "$FILE_NAME" ]; then
-                                scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH"Folder*/*"$FILE_NAME"* "$WP_NAME"/
-                            else
-                                scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH"* "$WP_NAME"/
-                            fi
-                        else
-                            IFS=',' read -ra FOLDERS <<< "$VM_SELECTION"
-                            for FOLDER in "${FOLDERS[@]}"; do
+                            eval `ssh-agent -s`
+                            trap "ssh-agent -k" EXIT
+                            ssh-add "$PK"
+            
+                           
+                            if [ "$FILTER_ALL" = "true" ]; then
                                 if [ -n "$FILE_NAME" ]; then
-                                    scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH""$FOLDER"/*"$FILE_NAME"* "$WP_NAME"/
+                                    scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH"Folder*/*"$FILE_NAME"* "$WP_NAME"/
                                 else
-                                    scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH$FOLDER/" "$WP_NAME"/
+                                    scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH"* "$WP_NAME"/
                                 fi
-                            done
-                        fi
-                        
-                        COMMENT
-                        
-                        for i in 1 2 3 4 5
-                        do
-                            echo "Number: $i"
-                        done
-                       echo "${#configs[@]}"
-                        
-                        
-                        
-                        
-                        
-                        
-                        '''
+                            else
+                                IFS=',' read -ra FOLDERS <<< "$VM_SELECTION"
+                                for FOLDER in "${FOLDERS[@]}"; do
+                                    if [ -n "$FILE_NAME" ]; then
+                                        scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH""$FOLDER"/*"$FILE_NAME"* "$WP_NAME"/
+                                    else
+                                        scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH$FOLDER/" "$WP_NAME"/
+                                    fi
+                                done
+                            fi
+		            	'''
                     }
                 }
             }
@@ -268,4 +254,3 @@ pipeline {
         }
     }
 }
-
