@@ -254,3 +254,98 @@ pipeline {
         }
     }
 }
+
+
+
+=====================================================================================================
+
+stage('Get logs from VM to WorkSpace') {
+    steps {
+        script {
+            withCredentials([sshUserPrivateKey(credentialsId: 'ssh', keyFileVariable: 'PK')]) {
+
+                // 1) Repo con el config
+                dir('git-repo'){
+                    git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
+                }
+
+                // 2) Leer y parsear VM_config.txt (formato: "FolderN | user@ip")
+                def configsFile = ''
+                dir("${FILE_DIR}"){
+                    if(fileExists("${CONFIG_NAME}")){
+                        configsFile = readFile("${CONFIG_NAME}")
+                    } else {
+                        error "NO CONFIG FILE FOUND."
+                    }
+                }
+
+                def hostMap = [:]  // p.ej. [Folder1:[user:'vboxuser', ip:'172.20.10.10'], ...]
+                configsFile.readLines().each { raw ->
+                    def line = raw?.trim()
+                    if (!line) return
+                    def parts = line.split(/\|/)
+                    if (parts.size() < 2) {
+                        echo "WARN: Config mal formada: '${line}'"
+                        return
+                    }
+                    def folder = parts[0].trim()
+                    def userAtIp = parts[1].trim()
+                    def ui = userAtIp.split('@')
+                    if (ui.size() != 2) {
+                        echo "WARN: user@ip inválido para ${folder}: '${userAtIp}'"
+                        return
+                    }
+                    hostMap[folder] = [user: ui[0].trim(), ip: ui[1].trim()]
+                }
+                echo "Config SSH por folder: ${hostMap}"
+
+                // 3) Determinar folders objetivo
+                def targetFolders = []
+                if (params.FILTER_ALL) {
+                    targetFolders = hostMap.keySet().toList().sort()
+                } else {
+                    if (!params.VM_SELECTION?.trim()) {
+                        error "VM_SELECTION está vacío y FILTER_ALL=false."
+                    }
+                    targetFolders = params.VM_SELECTION.split(',').collect { it.trim() }
+                }
+                echo "Folders objetivo: ${targetFolders}"
+
+                // 4) Construir script con ssh-agent y un scp por Folder
+                def scpScript = """
+                    set -e
+                    eval \$(ssh-agent -s)
+                    trap "ssh-agent -k" EXIT
+                    ssh-add "$PK"
+                    set +e
+                """.stripIndent()
+
+                targetFolders.each { folder ->
+                    def cfg = hostMap[folder]
+                    if (cfg == null) {
+                        echo "WARN: No hay config SSH para ${folder}. Se omite."
+                        return
+                    }
+                    def user = cfg.user
+                    def ip   = cfg.ip
+
+                    // Si se filtra por FILE_NAME, copiamos solo los archivos que casen; si no, copiamos la carpeta entera
+                    def remoteBase = "${env.LOGS_PATH}${folder}/"
+                    def remoteSpec = (params.FILE_NAME?.trim())
+                        ? "${remoteBase}*${params.FILE_NAME}*"
+                        : remoteBase
+
+                    scpScript += """
+                        echo ">>> Copiando ${folder} desde ${user}@${ip}:${remoteSpec}"
+                        scp -o StrictHostKeyChecking=no -r "${user}@${ip}:${remoteSpec}" "${env.WP_NAME}/" \
+                        || echo "[WARN] Falló copiar ${folder} (${user}@${ip}). Continuando..."
+                    """.stripIndent()
+                }
+
+                // 5) Ejecutar los scp
+                sh scpScript
+            }
+        }
+    }
+}
+
