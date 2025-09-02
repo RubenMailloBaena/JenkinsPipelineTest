@@ -1,5 +1,5 @@
 
-Versión 2, recuperamos los logs y nos conectamos de manera independiente a cada carpeta según la configuración que tengan en el archivo externos del repositorio
+Versión Final, recuperamos los logs y nos conectamos de manera independiente a cada carpeta según la configuración que tengan en el archivo externos del repositorio
 
 pipeline {
     agent any
