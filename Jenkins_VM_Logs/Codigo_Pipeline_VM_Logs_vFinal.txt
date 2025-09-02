@@ -1,0 +1,230 @@
+
+Versión 2, recuperamos los logs y nos conectamos de manera independiente a cada carpeta según la configuración que tengan en el archivo externos del repositorio
+
+pipeline {
+    agent any
+    
+    parameters{
+        booleanParam(
+          defaultValue: true,
+          description: 'Wether to filter by date or not.',
+          name: 'FILTER_DATE'
+        )
+        
+        booleanParam(
+          defaultValue: true,
+          description: 'Wether to filter by time or not.',
+          name: 'FILTER_TIME'
+        )
+        
+        booleanParam(
+          defaultValue: true,
+          description: 'Wether to filter by key words or not.',
+          name: 'FILTER_WORDS'
+        )
+        
+        validatingString(
+            name: 'DATE',
+            description: 'format: yyyy-mm-dd',
+            regex: /^\s*[0-9-]+\s*$/,
+            failedValidationMessage: 'Use numbers and -',
+            defaultValue: '2025-07-13'
+        )
+        
+        validatingString(
+            name: 'FROM_TIME',
+            description: 'format: hh:mm',
+            regex: /^\s*[0-9:]+\s*$/,
+            failedValidationMessage: 'Use numbers and :',
+            defaultValue: '00:00'
+        )
+        
+        validatingString(
+            name: 'TO_TIME',
+            description: 'format: hh:mm',
+            regex: /^\s*[0-9:]+\s*$/,
+            failedValidationMessage: 'Use numbers and :',
+            defaultValue: '23:59'
+        )
+        
+        validatingString(
+            name: 'KEY_WORDS',
+            description: 'format: word1, word2, word3, ... wordn',
+            regex: /.*/,
+            defaultValue: 'usuario1, usuario2'
+        )
+        
+        //TRUE --> queremos filtrar las palabras que contengan todas las keywords. 
+        //FALSE --> queremos filtrar las palabras que contengan al menos UNA keyword.
+        booleanParam(
+            defaultValue: false,
+            description: 'If checked, only the lines with all the keywords will show.',
+            name: 'JOIN_WORDS'
+            )
+            
+        validatingString(
+            name: 'FILE_NAME',
+            description: 'If empty, will filter all files. Otherwise, will filter the given name only',
+            regex: /^[A-Za-z0-9_ -]*$/, //PERMIT ALL
+            defaultValue: ''
+            )
+            
+        booleanParam(
+            defaultValue: true,
+            description: 'Filter from all VM',
+            name: 'FILTER_ALL'
+            )
+    }
+    
+    environment{
+        WP_NAME = 'logs' //NOMBRE DEL WORKSPACE QUE UTILIZAREMOS AQUI EN JENKINS
+        OUTPUT_F = 'Result.txt' //NOMBRE DEL ARCHIVO FINAL CON EL RESULTADO DE LOS LOGS
+        VM_HOST = 'vboxuser' //USUARIO DE LA VM, PARA CONECTARNOS MEDIANTE SSH
+        VM_IP = '172.20.10.10' //IP DE LA VM, SERVIDOR SSH
+        LOGS_PATH = '/home/vboxuser/Desktop/NTT_LOGS/' //PATH A LOS LOGS DE LA VM
+    }
+    
+    stages {
+        
+        //CREAMOS EL WORKSPACE EN JENKINS, DONDE GUARDAREMOS TODOS LOS ARCHIVOS.
+        stage('Create Workspace'){
+            steps{
+                script{
+                    cleanWs()
+                    powershell'''
+                        if(Test-Path -Path "$env:WP_NAME"){
+                            Remove-Item -Path "$env:WP_NAME" -Recurse -Force
+                        }
+                        mkdir "$env:WP_NAME"
+                    '''
+                }
+            }
+        }
+        
+        //MEDIANTE SSH, NOS CONECTAMOS A LA VM. RECUPERAMOS TODOS LOS ARCHIVOS CON LOS LOGS.
+        stage('Get logs from VM to WorkSpace') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'ssh', keyFileVariable: 'PK')]) {
+                    //Segun los filtros, recuperaremos solo los archivos necesarios. 
+                    //Si tenemos el filer all, recuperaremos de todas las carpetas. Si ademas buscamos archivos especificos, los filtraremos para solo recuperar los que queremos
+                    //Si no estamos filtrando todos, filtramos segun las carpetas/maquinas que hemos seleccionado para buscar.
+                    sh '''
+                        eval `ssh-agent -s`
+                        trap "ssh-agent -k" EXIT
+                        ssh-add "$PK"
+        
+                        if [ "$FILTER_ALL" = "true" ]; then
+                            if [ -n "$FILE_NAME" ]; then
+                                scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH"Folder*/*"$FILE_NAME"* "$WP_NAME"/
+                            else
+                                scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH"* "$WP_NAME"/
+                            fi
+                        else
+                            IFS=',' read -ra FOLDERS <<< "$VM_SELECTION"
+                            for FOLDER in "${FOLDERS[@]}"; do
+                                if [ -n "$FILE_NAME" ]; then
+                                    scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH""$FOLDER"/*"$FILE_NAME"* "$WP_NAME"/
+                                else
+                                    scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH$FOLDER/" "$WP_NAME"/
+                                fi
+                            done
+                        fi
+                    '''
+                }
+            }
+        }
+        
+        //RECORREMOS TODOS LOS ARCHIVOS DE LOGS, LINEA POR LINEA APLICANDO LOS FILTROS DE LOS PARAMETROS.
+        stage('Filter Logs') {
+            steps {
+                dir("${WP_NAME}") {
+                    script {
+                        //pillamos los parametros del usuario.
+                        def result = []
+                        def dateParam = params.DATE
+                        def fromTimeParam = params.FROM_TIME
+                        def toTimeParam = params.TO_TIME
+                        def keywords = params.KEY_WORDS.split(',').collect { it.trim() }
+                        
+
+                        //recorremos todos los archivos de logs que tenemos, por carpetas y txts.
+                        for (int i = 1; i <= 3; i++) {
+                            for (int j = 1; j <= 3; j++) {
+                                def filePath = "c${i}_log${j}.txt"
+                                def folderPath = "Folder${i}/${filePath}"
+
+                                def readFrom = "${folderPath}"
+                                
+                                //En caso de que hayamos filtrado por archivos especificos, no recuperaremos las carpetas enteras.
+                                //Entonces si no esta la carpeta que buscamos, ni el archivo respectivo, pasamos a la siguiente iteracion.
+                                if(!fileExists("${folderPath}")){ //Si la carpeta que buscamos no existe
+                                    if(!fileExists("${filePath}")){ //Si existe en archivos en vez de carpetas, al filtrar por archivo
+                                        continue
+                                    }
+                                    readFrom = "${filePath}"
+                                }
+                                def content = readFile(readFrom)
+        
+                                //separamos el contenido linea por linea y lo recorremos.
+                                content.split('\n').each { line ->
+                                    
+                                    //separamos el contenido de la linea por partes
+                                    //formato --> date|time|info|user|message
+                                    def parts = line.split('\\|')
+                                    
+                                    def logDate = parts[0]
+                                    def logTime = parts[1]
+                                    def logUser = parts[3]
+                                    def logMessage = parts[4]
+    
+                                    //Si no queremos filtrar por fecha pasamos directamente, por el contrario comprobamos que coincida
+                                    if (!params.FILTER_DATE || logDate == dateParam) {
+                                        
+                                        //Lo mismo con el tiempo, si quieremos filtrarlo miramos que este dentro del rango.
+                                        if (!params.FILTER_TIME || (logTime >= fromTimeParam && logTime <= toTimeParam)) {
+                                            //Para ver si pasa el filtro o no
+                                            boolean shouldAddLine = true 
+                                            def lineToCheck = logUser + logMessage
+    
+                                            //Si queremos filtrar por palabras, miramos si queremos que todas esten dentro de la misma linea
+                                            //O si por el contrario nos sirve con que la linea contenga una de las keywords para que sea valida
+                                            if(params.FILTER_WORDS){
+                                                if(params.JOIN_WORDS){
+                                                    //si alguna de las keywords no esta en la linea, no es valida, no la añadimos al resultado
+                                                    for(def keyword : keywords){
+                                                        if(!line.toLowerCase().contains(keyword.toLowerCase())){
+                                                            shouldAddLine = false
+                                                            break
+                                                        }
+                                                    }
+                                                } else {
+                                                    //Si alguna de las keywords esta en la linea, lo añadimos al resultado.
+                                                    shouldAddLine = false
+                                                    for(def keyword : keywords){
+                                                        if(line.toLowerCase().contains(keyword.toLowerCase())){
+                                                            shouldAddLine = true
+                                                            break
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            if (shouldAddLine) {
+                                                result.add(line)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        //Escribimos el archivo de salida con el contenido del resultado y lo guardamos en el workspace antes creado. 
+                        writeFile file: "${env.OUTPUT_F}", text: result.join('\n')
+        
+                        //Imprimimos por consola el resultado.
+                        def fileContent = readFile("${env.OUTPUT_F}")
+                        echo "LOGS OBTAINED FROM FILTERS ---> \n${fileContent}"
+                    }
+                }
+            }
+        }
+    }
+}
