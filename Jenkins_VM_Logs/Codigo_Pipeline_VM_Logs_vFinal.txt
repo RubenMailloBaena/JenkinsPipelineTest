@@ -82,6 +82,11 @@ pipeline {
         VM_HOST = 'vboxuser' //USUARIO DE LA VM, PARA CONECTARNOS MEDIANTE SSH
         VM_IP = '172.20.10.10' //IP DE LA VM, SERVIDOR SSH
         LOGS_PATH = '/home/vboxuser/Desktop/NTT_LOGS/' //PATH A LOS LOGS DE LA VM
+        REPO_URL = 'https://github.com/RubenMailloBaena/JenkinsPipelineTest.git'
+        BRANCH = 'main' 
+        FILE_DIR = 'git-repo/Jenkins_VM_Logs/tools'
+        CONFIG_NAME = 'VM_config.txt'
+        CONFIG_ARRAY = ''
     }
     
     stages {
@@ -96,6 +101,7 @@ pipeline {
                             Remove-Item -Path "$env:WP_NAME" -Recurse -Force
                         }
                         mkdir "$env:WP_NAME"
+                        mkdir "git-repo"
                     '''
                 }
             }
@@ -104,32 +110,97 @@ pipeline {
         //MEDIANTE SSH, NOS CONECTAMOS A LA VM. RECUPERAMOS TODOS LOS ARCHIVOS CON LOS LOGS.
         stage('Get logs from VM to WorkSpace') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'ssh', keyFileVariable: 'PK')]) {
-                    //Segun los filtros, recuperaremos solo los archivos necesarios. 
-                    //Si tenemos el filer all, recuperaremos de todas las carpetas. Si ademas buscamos archivos especificos, los filtraremos para solo recuperar los que queremos
-                    //Si no estamos filtrando todos, filtramos segun las carpetas/maquinas que hemos seleccionado para buscar.
-                    sh '''
-                        eval `ssh-agent -s`
-                        trap "ssh-agent -k" EXIT
-                        ssh-add "$PK"
+                script {
+                    withCredentials([sshUserPrivateKey(credentialsId: 'ssh', keyFileVariable: 'PK')]) {
         
-                        if [ "$FILTER_ALL" = "true" ]; then
-                            if [ -n "$FILE_NAME" ]; then
-                                scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH"Folder*/*"$FILE_NAME"* "$WP_NAME"/
-                            else
-                                scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH"* "$WP_NAME"/
-                            fi
-                        else
-                            IFS=',' read -ra FOLDERS <<< "$VM_SELECTION"
-                            for FOLDER in "${FOLDERS[@]}"; do
-                                if [ -n "$FILE_NAME" ]; then
-                                    scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH""$FOLDER"/*"$FILE_NAME"* "$WP_NAME"/
-                                else
-                                    scp -r "$VM_HOST"@"$VM_IP":"$LOGS_PATH$FOLDER/" "$WP_NAME"/
-                                fi
-                            done
-                        fi
-                    '''
+                        //Clonamos el repositorio de Git
+                        dir('git-repo'){
+                            git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
+                        }
+        
+                        //Obtenemos el archivo con las configuraciones SSH de cada maquina, Folder en este caso.
+                        def configsFile = ''
+                        dir("${FILE_DIR}"){
+                            if(fileExists("${CONFIG_NAME}")){
+                                configsFile = readFile("${CONFIG_NAME}")
+                            } else {
+                                error "NO CONFIG FILE FOUND."
+                            }
+                        }
+        
+        
+                        //Creamos un mapa con las distintas configuraciones de cada maquina. 
+                        //Por ejemplo en el archivo nos llega como Foler1 | vboxuser@172.20.10.10
+                        //Y el resultado nos quedara: [Folder1:[user:'vboxuser', ip:'172.20.10.10']].
+                        //De esta manera podemos usar las configuraciones de cada uno mas adelante.
+                        def VMconfigs = [:]
+                        configsFile.readLines().each { newLine ->
+                            def line = newLine.trim()
+                            
+                            if (!line) return //Si no hay ninguna linea, salimos.
+                            
+                            def parts = line.split(/\|/)
+                            
+                            def folder = parts[0].trim() //Guardamos la priemra parte: FolderN
+                            def userAtIp = parts[1].trim() //Y la parte de configuracion
+                            
+                            def ui = userAtIp.split('@') //Volvemos a separar el user y la ip
+                            
+                            //Y gurdamos el resultado en el mapa. 
+                            VMconfigs[folder] = [user: ui[0].trim(), ip: ui[1].trim()]
+                        }
+                        echo "Config SSH por folder: ${VMconfigs}"
+        
+                        //Aqui determinamos de que carpetas recuperaremos los logs segun los parametros que hayamos seleccionado.
+                        //Si teniamos marcado el FILTER ALL, Obtendremos todas las configuraciones del mapa creado.
+                        //En caso contrario solo añadiremos a targetFolders las que hemos seleccionado en parametros.
+                        def targetFolders = []
+                        if (params.FILTER_ALL) {
+                            targetFolders = VMconfigs.keySet().toList().sort()
+                        } else {
+                            if (!params.VM_SELECTION.trim()) {
+                                error "No Folder Selected!"
+                            }
+                            targetFolders = params.VM_SELECTION.split(',').collect { it.trim() }
+                        }
+        
+                        //Construimos un script ssh para ejecutar mas adelante con todo el contenido necesario.
+                        //Aqui en esta primera parte, creamos un agente ssh, que nos servira para establecer la conexion.
+                        def scpScript = """
+                            eval \$(ssh-agent -s)
+                            trap "ssh-agent -k" EXIT
+                            ssh-add "$PK"
+                        """.stripIndent()
+        
+                        //Por cada Folder que estemos buscando, obtenemos su configuracion del mapa creado anteriormente.
+                        targetFolders.each { folder ->
+                            def cfg = VMconfigs[folder]
+                            if (cfg == null) {
+                                echo "WARN: No SSH config found for ${folder}."
+                                return
+                            }
+                            //guardamos el usuario e IP de cada Foler.
+                            def user = cfg.user
+                            def ip   = cfg.ip
+        
+                            // Si filtramos archivos especificos con FILE_NAME, copiamos solo los archivos que cuadren con los que buscamos
+                            def VMFolder = "${env.LOGS_PATH}${folder}/"
+                            def fileName = (params.FILE_NAME?.trim())
+                                ? "${VMFolder}*${params.FILE_NAME}*"
+                                : VMFolder
+                                //Si hay, lo añadimos a la ruta que buscamos, si no simplemente buscaremos la carpeta.
+        
+                            //Añadimos al script la parte donde recuperamos los archivos necesarios para mas adelante filtrarlos. 
+                            //Lo hacemos mediante scp. Nos conectamos y buscamos la ruta que hemos contruido.
+                            scpScript += """
+                                scp -o StrictHostKeyChecking=no -r "${user}@${ip}:${fileName}" "${env.WP_NAME}/" \
+                                || echo "error while getting files ${user}@${ip}:${fileName}"
+                            """.stripIndent() //Esta ultima funcion elimina las comillas """ para que al ejecutar no interfieran
+                        }
+        
+                        //Aqui finalmente ejecutamos el script sh, donde se recuperarn todos los archivos.
+                        sh scpScript
+                    }
                 }
             }
         }
