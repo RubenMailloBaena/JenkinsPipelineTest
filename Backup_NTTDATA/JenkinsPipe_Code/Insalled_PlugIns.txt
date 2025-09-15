@@ -1,0 +1,785 @@
+Active Choices Plug-in
+Versión2.8.8
+This plug-in provides additional parameter types for jobs, that allow you to cascade changes and render images or other HTML elements instead of the traditional parameter.
+Report an issue with this plugin
+
+
+Ant
+Versión513.vde9e7b_a_0da_0f
+Adds Apache Ant support to Jenkins
+Report an issue with this plugin
+
+
+Apache HttpComponents Client 4.x API Plugin
+Versión4.5.14-269.vfa_2321039a_83
+Bundles Apache HttpComponents Client 4.x and allows it to be used by Jenkins plugins.
+Report an issue with this plugin
+
+
+Artifactory Plugin
+Versión4.0.8
+This plugin allows your build jobs to deploy artifacts and resolve dependencies to and from Artifactory, and then have them linked to the build job that created them. The plugin includes a vast collection of features, including a rich pipeline API library and release management for Maven and Gradle builds with Staging and Promotion.
+Report an issue with this plugin
+
+
+ASM API Plugin
+Versión9.8-163.vb_2a_96d3f9c3c
+This plugin provides the ASM APIs (v9.8) for other plugins.
+Report an issue with this plugin
+
+
+9.8-135.vb_2239d08ee90
+
+Bootstrap 5 API
+Versión5.3.7-2
+Provides Bootstrap 5 for Jenkins Plugins. Bootstrap is (according to their self-perception) the world’s most popular front-end component library to build responsive, mobile-first projects on the web.
+Report an issue with this plugin
+
+
+5.3.7-1
+
+bouncycastle API Plugin
+Versión2.30.1.81-264.v95c79c0e772c
+This plugin provides a stable API to Bouncy Castle related tasks.
+Report an issue with this plugin
+
+
+2.30.1.80-261.v00c0e2618ec3
+
+Branch API
+Versión2.1235.v04e86c7ce54c
+This plugin provides an API for multiple branch based projects.
+Report an issue with this plugin
+
+
+2.1233.vfb_6b_2b_3ed499
+
+Build Timeout
+Versión1.38
+This plugin allows you to automatically terminate a build if it's taking too long.
+Report an issue with this plugin
+
+
+Caffeine API Plugin
+Versión3.2.2-178.v353b_8428ed56
+Caffeine api plugin for use by other Jenkins plugins.
+Report an issue with this plugin
+
+
+3.2.0-166.v72a_6d74b_870f
+
+Checks API plugin
+Versión373.vfe7645102093
+This plugin defines an API for Jenkins to publish checks to SCM platforms.
+Report an issue with this plugin
+
+
+370.vb_61a_c57328f3
+
+commons-lang3 v3.x Jenkins API Plugin
+Versión3.18.0-98.v3a_674c06072d
+Jenkins Api Plugin that Bundles Apache Commons Lang v3.x.
+Usage will slim downstream plugin and not require dependency jar being provided by core Jenkins.
+Provides org.apache.commons:commons-lang3:3.18.0.
+Report an issue with this plugin
+
+
+3.17.0-87.v5cf526e63b_8b_
+
+commons-text API Plugin
+Versión1.14.0-194.v804a_dc3a_1b_d8
+Jenkins Api Plugin that Bundles Apache Commons Text v1.x.
+Usage will slim downstream plugin.
+Provides org.apache.commons:commons-text:1.14.0.
+Report an issue with this plugin
+
+
+1.13.1-176.v74d88f22034b_
+
+Config File Provider Plugin
+Versión994.v3d4a_5fa_f353a_
+Ability to provide configuration files (e.g. settings.xml for maven, XML, groovy, custom files,...) loaded through the UI which will be copied to the job workspace.
+Report an issue with this plugin
+
+
+988.v0461fcc2b_9d1
+
+Configuration as Code Plugin
+Versión1985.vdda_32d0c4ea_b_
+This plugin allows configuration of Jenkins based on human-readable declarative configuration files.
+Report an issue with this plugin
+
+
+1971.vf9280461ea_89
+
+Credentials Binding Plugin
+Versión702.vfe613e537e88
+Allows credentials to be bound to environment variables for use from miscellaneous build steps.
+Report an issue with this plugin
+
+
+696.v256688029804
+
+Credentials Plugin
+Versión1419.v2337d1ceceef
+This plugin allows you to store credentials in Jenkins.
+Report an issue with this plugin
+
+
+1417.vd854994a_f6b_e
+
+Custom Folder Icon Plugin
+Versión2.21
+This plugin extends the Folders Plugin to provide custom icons for folders.
+You can upload your own images, use predefined icons and emojis or the combined build status of the jobs within a folder as icon.
+Report an issue with this plugin
+
+
+2.20
+
+Dark Theme
+Versión524.vd675b_22b_30cb_
+Adds a dark theme to Jenkins, respecting browser and OS themes if configured.
+Report an issue with this plugin
+
+
+Dashboard View
+Versión2.537.v5132851f6ca_f
+Customizable dashboard that can present various views of job information.
+Report an issue with this plugin
+
+
+2.528.v3470c02b_d7c9
+
+Dev Tools Symbols API Plugin
+Versión392.v27a_482d90083
+Provides severals IT tools logos for Jenkins Plugins, internally known as "symbols".
+Report an issue with this plugin
+
+
+390.va_22c30a_b_23a_2
+
+Display URL API
+Versión2.217.va_6b_de84cc74b_
+Provides the DisplayURLProvider extension point to provide alternate URLs for use in notifications.
+Report an issue with this plugin
+
+
+2.209.v582ed814ff2f
+
+Durable Task Plugin
+Versión595.ve87b_f1318d67
+Library offering an extension point for processes which can run outside of Jenkins yet be monitored.
+Report an issue with this plugin
+
+
+594.v093d5387225c
+
+ECharts API
+Versión6.0.0-1
+Provides ECharts for Jenkins Plugins, a JavaScript visualization tool to create intuitive, interactive, and highly-customizable charts.
+Report an issue with this plugin
+
+
+5.6.0-5
+
+EDDSA API Plugin
+Versión0.3.0.1-19.vc432d923e5ee
+EDDSA api plugin for use by other Jenkins plugins.
+Note:Modern (> 15) JDK variants natively support EdDSA signatures via JCE but some libraries still target JDK 11 and have a need of this library.
+Report an issue with this plugin
+
+
+Emoji Symbols API Plugin
+Versión16.0-26.v9818ff7423f0
+This plugin provides Unicode Emojis v16.0 as symbols to be used by other plugins.
+Report an issue with this plugin
+
+
+File Parameter Plugin
+Versión385.v1cf03fdff8ce
+Provides an alternative set of file parameters that work with Pipeline, unlike the type built into Jenkins core.
+Report an issue with this plugin
+
+
+367.vc2cc39fb_b_593
+
+Folders Plugin
+Versión6.1037.v4cb_8573b_72a_a_
+This plugin allows users to create "folders" to organize jobs. Users can define custom taxonomies (like by project type, organization type etc). Folders are nestable and you can define views within folders. Maintained by CloudBees, Inc.
+Report an issue with this plugin
+
+
+6.1036.vb_94fd035b_287
+
+Font Awesome API
+Versión7.0.0-1
+Provides Font Awesome 6 for Jenkins Plugins. Font Awesome has vector icons and social logos. It is the web's most popular icon set and toolkit with more than 1700 free icons.
+Report an issue with this plugin
+
+
+6.7.2-1
+
+Git client
+Versión6.3.0
+Utility plugin for Git support in Jenkins
+Report an issue with this plugin
+
+
+6.2.0
+
+Git plugin
+Versión5.7.0
+This plugin integrates Git with Jenkins.
+Report an issue with this plugin
+
+
+GitHub API Plugin
+Versión1.321-488.v9b_c0da_9533f8
+This plugin provides GitHub API for other plugins.
+Report an issue with this plugin
+
+
+GitHub Branch Source
+Versión1834.v857721ea_74c6
+Multibranch projects and organization folders from GitHub. Maintained by CloudBees, Inc.
+Report an issue with this plugin
+
+
+1833.v77b_6542df5a_8
+
+GitHub plugin
+Versión1.44.0
+This plugin integrates GitHub to Jenkins.
+Report an issue with this plugin
+
+
+1.43.0
+
+GitLab Plugin
+Versión1.9.8
+This plugin allows GitLab to trigger Jenkins builds and display their results in the GitLab UI.
+Report an issue with this plugin
+
+
+Gradle
+Versión2.15
+This plugin allows Jenkins to invoke Gradle build scripts directly.
+Report an issue with this plugin
+
+
+Gson API Plugin
+Versión2.13.1-153.vb_3d0c48a_a_b_4a_
+This plugin provides the Gson APIs (v2.13.1) for other plugins.
+Report an issue with this plugin
+
+
+2.13.1-139.v4569c2ef303f
+
+Instance Identity
+Versión203.v15e81a_1b_7a_38
+Maintains an RSA key pair that can serve as a foundation of authentication when communicating with Jenkins
+Report an issue with this plugin
+
+
+Ionicons API
+Versión94.vcc3065403257
+Provides Ionicons for Jenkins Plugins, internally known as "symbols".
+Check out the design-library how to use ionicons in your plugin.
+Report an issue with this plugin
+
+
+88.va_4187cb_eddf1
+
+Jackson 2 API Plugin
+Versión2.19.2-408.v18248a_324cfe
+This plugin exposes the Jackson 2 JSON APIs to other Jenkins plugins.
+Report an issue with this plugin
+
+
+2.19.0-404.vb_b_0fd2fea_e10
+
+Jakarta Activation API
+Versión2.1.3-2
+This plugin provides the Jakarta Activation API for other plugins.
+Report an issue with this plugin
+
+
+Jakarta Mail API
+Versión2.1.3-2
+This plugin provides the Jakarta Mail API for other plugins.
+Report an issue with this plugin
+
+
+Java JSON Web Token (JJWT) Plugin
+Versión0.11.5-120.v0268cf544b_89
+Bundles the Java JSON Web Token (JJWT) library.
+Report an issue with this plugin
+
+
+JavaBeans Activation Framework (JAF) API
+Versión1.2.0-8
+This plugin provides the JavaBeans Activation Framework (JAF) API for other plugins.
+Report an issue with this plugin
+
+
+Javadoc Plugin
+Versión354.vee1a_660b_4990
+This plugin adds Javadoc support to Jenkins.
+Report an issue with this plugin
+
+
+327.vdfe586651ee0
+
+JavaMail API
+Versión1.6.2-11
+This plugin provides the JavaMail API for other plugins.
+Report an issue with this plugin
+
+
+JAXB plugin
+Versión2.3.9-133.vb_ec76a_73f706
+JAXB packaging for more transparent Java 9+ compatibility
+Report an issue with this plugin
+This plugin is up for adoption! We are looking for new maintainers. Visit our Adopt a Plugin initiative for more information.
+
+
+Jersey 2 API
+Versión2.47-165.ve7809a_3e87e0
+This plugin provides the JAX-RS 2.1 and Jersey 2 APIs for other plugins.
+Report an issue with this plugin
+
+
+2.45-154.v4ded3dc34f81
+
+Joda Time API Plugin
+Versión2.14.0-149.v1c3ce991d1b_9
+This plugin provides the Joda Time APIs (v2.14.0) for other plugins.
+Report an issue with this plugin
+
+
+2.14.0-127.v7d9da_295a_d51
+
+JQuery3 API
+Versión3.7.1-583.vda_6ca_102270d
+Provides jQuery 3 for Jenkins Plugins. jQuery is a fast, small, and feature-rich JavaScript library.
+Report an issue with this plugin
+
+
+3.7.1-3
+
+JSch dependency plugin
+Versión0.2.16-95.v3eecb_55fa_b_78
+Jenkins plugin that brings the JSch library as a plugin dependency, and provides an SSHAuthenticatorFactory for using JSch with the ssh-credentials plugin.
+Report an issue with this plugin
+
+
+JSON Api
+Versión20250517-163.v1c5da_e99c775
+This plugin provides the JSON APIs (v20250517) for other plugins.
+Report an issue with this plugin
+
+
+20250517-153.vc8a_a_d87c0ce3
+
+JSON Path API
+Versión2.9.0-178.vca_b_c71881321
+This plugin provides the JSON Path APIs (v2.9.0) for other plugins.
+Report an issue with this plugin
+
+
+2.9.0-148.v22a_7ffe323ce
+
+jsoup API
+Versión1.21.1-58.vfc578e6e2610
+This plugin provides the jsoup APIs (v1.21.1) for other plugins.
+Report an issue with this plugin
+
+
+1.21.1-52.v96e4041b_60fd
+
+JUnit Plugin
+Versión1335.v6b_a_a_e18534e1
+Allows JUnit-format test results to be published.
+Report an issue with this plugin
+
+
+LDAP Plugin
+Versión780.vcb_33c9a_e4332
+Adds LDAP authentication to Jenkins
+Report an issue with this plugin
+
+
+Mailer
+Versión515.vd788654779b_1
+This plugin allows you to configure email notifications for build results.
+Report an issue with this plugin
+
+
+509.vc54d23fc427e
+
+Matrix Authorization Strategy
+Versión3.2.7
+Offers matrix-based security authorization strategies (global and per-project).
+Report an issue with this plugin
+
+
+3.2.6
+
+Matrix Project
+Versión849.v0cd64ed7e531
+Multi-configuration (matrix) project type.
+Report an issue with this plugin
+
+
+Maven Integration
+Versión3.26
+This plugin provides a deep integration between Jenkins and Maven. It adds support for automatic triggers between projects depending on SNAPSHOTs as well as the automated configuration of various Jenkins publishers such as Junit.
+Report an issue with this plugin
+
+
+Metrics
+Versión4.2.32-481.v75f035fdc894
+This plugin exposes the Metrics API to Jenkins plugins.
+Report an issue with this plugin
+
+
+4.2.32-476.v5042e1c1edd7
+
+Mina SSHD API :: Common
+Versión2.15.0-161.vb_200831a_c15b_
+Provides the Common module of Apache Mina SSHD to plugins.
+Report an issue with this plugin
+
+
+Mina SSHD API :: Core
+Versión2.15.0-161.vb_200831a_c15b_
+Provides the Core module of Apache Mina SSHD to plugins.
+Report an issue with this plugin
+
+
+OkHttp Plugin
+Versión4.11.0-189.v976fa_d3379d6
+This plugin provides OkHttp for other plugins.
+Report an issue with this plugin
+
+
+OWASP Markup Formatter Plugin
+Versión173.v680e3a_b_69ff3
+Uses the OWASP Java HTML Sanitizer to allow safe-seeming HTML markup to be entered in project descriptions and the like.
+Report an issue with this plugin
+
+
+PAM Authentication plugin
+Versión1.12
+Adds Unix Pluggable Authentication Module (PAM) support to Jenkins
+Report an issue with this plugin
+
+
+Pipeline
+Versión608.v67378e9d3db_1
+A suite of plugins that lets you orchestrate automation, simple or complex. See Pipeline as Code with Jenkins for more details.
+Report an issue with this plugin
+
+
+Pipeline Graph Analysis Plugin
+Versión241.vc3d48fb_b_2582
+Provides a REST API to access pipeline and pipeline run data.
+Report an issue with this plugin
+
+
+237.v2b_75640ca_888
+
+Pipeline Graph View
+Versión619.v92f3fcdc39db_
+Provides "Pipeline Graph" visualization of a pipeline job run.
+Report an issue with this plugin
+
+
+616.vb_82b_eedecfc4
+
+Pipeline: API
+Versión1382.veca_a_efe062fa_
+Plugin that defines Pipeline API.
+Report an issue with this plugin
+
+
+1380.ve03e7a_63d139
+
+Pipeline: Basic Steps
+Versión1079.vce64b_a_929c5a_
+Commonly used steps for Pipelines.
+Report an issue with this plugin
+
+
+Pipeline: Build Step
+Versión571.v08a_fffd4b_0ce
+Adds the Pipeline step build to trigger builds of other jobs.
+Report an issue with this plugin
+
+
+567.vea_ce550ece97
+
+Pipeline: Declarative
+Versión2.2258.v4e96d2b_da_f9b_
+An opinionated, declarative Pipeline.
+Report an issue with this plugin
+
+
+2.2255.v56a_15e805f12
+
+Pipeline: Declarative Extension Points API
+Versión2.2258.v4e96d2b_da_f9b_
+APIs for extension points used in Declarative Pipelines.
+Report an issue with this plugin
+
+
+2.2255.v56a_15e805f12
+
+Pipeline: GitHub Groovy Libraries
+Versión65.v203688e7727e
+Allows Pipeline Groovy libraries to be loaded on the fly from GitHub.
+Report an issue with this plugin
+
+
+Pipeline: Groovy
+Versión4177.vb_203fe395445
+Pipeline execution engine based on continuation passing style transformation of Groovy scripts.
+Report an issue with this plugin
+
+
+4175.ve65b_fa_663eed
+
+Pipeline: Groovy Libraries
+Versión752.vdddedf804e72
+Libraries for Pipeline scripts allowing logic to be shared across jobs.
+Report an issue with this plugin
+
+
+Pipeline: Input Step
+Versión534.v352f0a_e98918
+Adds the Pipeline step input to wait for human input or approval.
+Report an issue with this plugin
+
+
+532.v9e7466cb_4406
+
+Pipeline: Job
+Versión1540.v295eccc9778f
+Defines a new job type for pipelines and provides their generic user interface.
+Report an issue with this plugin
+
+
+1537.v66038d35fc76
+
+Pipeline: Milestone Step
+Versión138.v78ca_76831a_43
+Plugin that provides the milestone step
+Report an issue with this plugin
+
+
+Pipeline: Model API
+Versión2.2258.v4e96d2b_da_f9b_
+Model API for Declarative Pipeline.
+Report an issue with this plugin
+
+
+2.2255.v56a_15e805f12
+
+Pipeline: Multibranch
+Versión810.v6b_6e77da_7058
+Enhances Pipeline plugin to handle branches better by automatically grouping builds from different branches.
+Report an issue with this plugin
+
+
+806.vb_b_688f609ee9
+
+Pipeline: Nodes and Processes
+Versión1446.v3efd13441220
+Pipeline steps locking agents and workspaces, and running external processes that may survive a Jenkins restart or agent reconnection.
+Report an issue with this plugin
+
+
+1442.vb_a_b_f5f3da_9f9
+
+Pipeline: SCM Step
+Versión437.v05a_f66b_e5ef8
+Adds a Pipeline step to check out or update working sources from various SCMs (version control).
+Report an issue with this plugin
+
+
+Pipeline: Stage Step
+Versión322.vecffa_99f371c
+Adds the Pipeline step stage to delineate portions of a build.
+Report an issue with this plugin
+
+
+Pipeline: Stage Tags Metadata
+Versión2.2258.v4e96d2b_da_f9b_
+Library plugin for Pipeline stage tag metadata.
+Report an issue with this plugin
+
+
+2.2255.v56a_15e805f12
+
+Pipeline: Step API
+Versión706.v518c5dcb_24c0
+API for asynchronous build step primitive.
+Report an issue with this plugin
+
+
+704.ve4f0967e98fa_
+
+Pipeline: Supporting APIs
+Versión976.vb_d9493c2eb_09
+Common utility implementations to build Pipeline Plugin
+Report an issue with this plugin
+
+
+968.v8f17397e87b_8
+
+Plain Credentials Plugin
+Versión199.v9f8e1f741799
+Allows use of plain strings and files as credentials.
+Report an issue with this plugin
+
+
+195.vb_906e9073dee
+
+Plugin Utilities API
+Versión6.1.0
+Provides utility classes that can be used to accelerate plugin development.
+Report an issue with this plugin
+
+
+Prism API
+Versión1.30.0-1
+Provides Prism for Jenkins Plugins. Prism is a lightweight, extensible syntax highlighter, built with modern web standards in mind. It’s used in millions of websites, including some of those you visit daily.
+Report an issue with this plugin
+
+
+Resource Disposer Plugin
+Versión0.25
+Dispose resources asynchronously. Utility plugin for resources that require more retries or take a long time to delete
+Report an issue with this plugin
+
+
+SCM API Plugin
+Versión707.v749f968369d4
+This plugin provides a new enhanced API for interacting with SCM systems.
+Report an issue with this plugin
+
+
+704.v3ce5c542825a_
+
+Script Security Plugin
+Versión1378.vf25626395f49
+Allows Jenkins administrators to control what in-process scripts can be run by less-privileged users.
+Report an issue with this plugin
+
+
+1373.vb_b_4a_a_c26fa_00
+
+SnakeYAML API Plugin
+Versión2.3-125.v4d77857a_b_402
+This plugin provides SnakeYAML for other plugins.
+Report an issue with this plugin
+
+
+SSH Agent Plugin
+Versión386.v36cc0c7582f0
+This plugin allows you to provide SSH credentials to builds via a ssh-agent in Jenkins.
+Report an issue with this plugin
+
+
+SSH Build Agents plugin
+Versión3.1071.v0d059c7b_c555
+Allows to launch agents over SSH, using a Java implementation of the SSH protocol.
+Report an issue with this plugin
+
+
+3.1031.v72c6b_883b_869
+
+SSH Credentials Plugin
+Versión361.vb_f6760818e8c
+Allows storage of SSH credentials in Jenkins
+Report an issue with this plugin
+
+
+359.v2191c4cf635f
+
+SSH Pipeline Steps
+Versión2.0.79.v1d1b_5f76dda_8
+Jenkins pipeline steps which provides SSH facilities such as command execution or file transfer for continuous delivery.
+Report an issue with this plugin
+
+
+SSH server
+Versión3.374.v19b_d59ce6610
+Adds SSH server functionality to Jenkins, exposing CLI commands through it.
+Report an issue with this plugin
+
+
+3.372.v5d04a_e92d8cf
+
+SSH2 Easy Plugin
+Versión1.6
+This plugin allows you to ssh2 remote server to execute linux commands, shell, sftp upload, download, etc.
+Report an issue with this plugin
+This plugin is up for adoption! We are looking for new maintainers. Visit our Adopt a Plugin initiative for more information.
+
+
+Structs Plugin
+Versión353.v261ea_40a_80fb_
+Library plugin for DSL plugins that need names for Jenkins objects.
+Report an issue with this plugin
+
+
+350.v3b_30f09f2363
+
+Theme Manager
+Versión319.v9193461f9671
+Provides an extension point for adding user and global themes, built-in to Jenkins.
+Report an issue with this plugin
+
+
+318.va_0ef2ddc143b_
+
+Timestamper
+Versión1.30
+Adds timestamps to the Console Output
+Report an issue with this plugin
+
+
+1.29
+
+Token Macro Plugin
+Versión477.vd4f0dc3cb_cf1
+This plug-in adds reusable macro expansion capability for other plug-ins to use.
+Report an issue with this plugin
+
+
+444.v52de7e9c573d
+
+Trilead API Plugin
+Versión2.209.v0e69b_c43c245
+Trilead API Plugin provides the Trilead library to any dependent plugins in an easily update-able manner.
+Report an issue with this plugin
+
+
+Validating String Parameter Plugin
+Versión255.v31e2e6d0d273
+Adds a new parameter type called Validating String Parameter which supports regular expression validation of a user entered parameter.
+Report an issue with this plugin
+
+
+Variant Plugin
+Versión70.va_d9f17f859e0
+This user-invisible library plugin allows other multi-modal plugins to behave differently depending on where they run.
+Report an issue with this plugin
+
+
+Workspace Cleanup
+Versión0.48
+This plugin deletes the project workspace when invoked.
+Report an issue with this plugin

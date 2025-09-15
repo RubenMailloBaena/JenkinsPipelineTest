@@ -1,0 +1,166 @@
+pipeline{
+    agent any
+    
+    parameters{
+        //Parametros que recibiremos a traves de la pipe padre.
+        string(name: 'PARAM_1', defaultValue: '0.0.0', description: 'New Version')
+        string(name: 'USERNAME', defaultValue: 'rubenDefaultValue', description: 'github username')
+        string(name: 'EMAIL', defaultValue: 'rubenDefaultValue@gmail.com', description: 'github email')
+        string(name: 'BRANCH', defaultValue: 'mainDefaultValue', description: 'github push branch')
+        string(name: 'PARENT_PATH', defaultValue: 'defaultPath', description: 'parent pipeline path')
+        string(name: 'PUSH_URL', defaultValue: 'url', description: 'URL to push new changes')
+        booleanParam(name: 'OVERRIDE_VERSION', defaultValue: false, description: 'overrides version')
+    }
+    
+    environment{
+        POM_FILE = '_pom.xml'
+        MESSAGE = ''
+    }
+    
+    stages{
+        stage('Get Respective Pom.xml'){
+            steps{
+                //Entramos al repositorio donde tenemos clonado el repositorio de github, donde en este caso tenemos los poms.xml de las librerias.
+                dir('../Update_Versions_Pipeline/repo-temp/Libraries_Update_Files'){
+                    script{
+                        logMessage("----- Starting Pipeline... -----")
+                        
+                        //PARA SIMULAR UN ERROR AL ACTUALIZAR Y QUE NO SE GUARDE SU VERSION EN LA CHECKLIST. (descomentar el error).
+                        //error "TEST ERROR"
+                        
+                        //Guardamos el nombre del pom.xml que tenemos que actualizar y comprobamos que exista el archivo.
+                        def pomName = "${env.JOB_BASE_NAME}${env.POM_FILE}"
+                        if(fileExists("${pomName}")){
+                            
+                            //Si existe, guardamos su contenido. Obtenemos la version actual escrita en el POM.XML
+                            logMessage("POM.xml FOUND\n")
+                            def file = readFile(pomName)
+                            
+                            def currentVersion = (file =~ /<version>(.*?)<\/version>/)[0][1]
+                            logMessage("Current Version: ${currentVersion}")
+                            logMessage("New Version: ${env.PARAM_1}")
+                            logMessage("Validating new Version...\n")
+                            
+                            //Comprobamos que es una version valida, pasandole la version actual y la nueva.
+                            if(!isValidVersion("${currentVersion}", "${env.PARAM_1}")){
+                                logMessage("[ERROR]: The new version can't be de same, or a latter number!")
+                                error "[ERROR]: The new version can't be de same, or a latter number!"
+                            }
+                            
+                            if(params.OVERRIDE_VERSION){
+                                logMessage("Overriding new version!\n")
+                            }
+                            else{
+                               logMessage("New Version Validated!\n") 
+                            }
+                                
+                            logMessage("Updating Library...")
+                            
+                            //Si llegamos aqui significa que la version es valida, por lo que actualizamos el pom.xml de esta libreria con la nueva version.
+                            def fileUpdated = file.replaceFirst(/<version>.*?<\/version>/, "<version>${env.PARAM_1}</version>")
+                            writeFile(file: "${pomName}", text: fileUpdated)
+                            
+                            logMessage("Library Updated to Version: ${env.PARAM_1}")
+                        }
+                        else{
+                            error "POM.xml not found"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Push Updated Pom.xml'){
+            steps{
+                //Entramos al directiorio donde se encuentra el repositorio de git clonado por la pipe padre.
+                dir('../Update_Versions_Pipeline/repo-temp'){
+                    //Hacemos un push con el nuevo archivo pom.xml actualizado.
+                    withCredentials([string(credentialsId: 'github_push', variable: 'GITHUB_TOKEN')]){
+                        script{
+                            logMessage("Pushing Changes to Repo") 
+                            
+                            powershell '''
+                                git config core.autocrlf true
+                            
+                                git config user.name "$env:USERNAME"
+                                git config user.email "$env:EMAIL"
+                                
+                                git add Libraries_Update_Files/*.xml
+                                
+                                $env:GIT_URL = "https://${env:GITHUB_TOKEN}$env:PUSH_URL"
+                                
+                                git commit -m "${env:JOB_BASE_NAME} updated (v${env:PARAM_1})"
+                                git push --set-upstream $env:GIT_URL $env:BRANCH
+                            '''
+                            
+                            logMessage("Succesfully Pushed Changes to Repo")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            //Por ultimo, limpiamos el workspace de esta pipe, para que no queden archivos innecesarios.
+            //Podremos ver los logs desde el workspace de la pipe padre.
+            logMessage("Pipeline Finished!\n")
+            cleanWs()
+        }
+    }
+}
+
+//Esta funcion nos permite determinar si la version que nos ha llegado por parametros es valida 
+//Sera valida si la nueva version es mas grande que la actual. 
+//Si por parametros nos llega el OVERRIDE_VERSION en true, si las versiones son iguales tambien sera una version valida.
+//En caso de que la nueva version sea una mas pequeña, devolveremos false, no sera una version valida.
+def isValidVersion(currentVersion, newVersion) {
+    //Separamos los numeros de cada version en listas, separandolos por los puntos.
+    def currentVersionNums = currentVersion.split("\\.")
+    def newVersionNums = newVersion.split("\\.")
+    
+    // Miramos que version es mas larga (ex: 1.0.0 / 1.1 --> recorreremos 3 veces (1.0.0))
+    def repetition = Math.max(currentVersionNums.length, newVersionNums.length)
+    
+    for (int i = 0; i < repetition; i++) {
+        //Si una version tiene mas numero que otra, dara error indexOutOfBounds al intentar acceder al los numeros, es por eso que si nos salimos lo asignaremos como un 0.
+        //Ejemplo: (recorremos la version 1.1.1, y la actual es la 1.1, al comparar el ultimo 1 (1.1.1), la segunda version al no tener mas numeros (1.1), equivaldra a un 0 (1.1.0)).
+        //De esta manera evitaremos errores. Ademas pasamos de string a numeros para su comparacion.
+        def currentNum = i < currentVersionNums.length ? Integer.parseInt(currentVersionNums[i]) : 0
+        def newNum = i < newVersionNums.length ? Integer.parseInt(newVersionNums[i]) : 0
+        
+        //Si un numero de la nueva version es mas pequeño, es mas antigua. No es una version valida.
+        if(newNum < currentNum){
+            return false
+        }
+        //Si un numero de la nueva versio es mas grande, es una version mas nueva. Es una version valida.
+        else if(newNum > currentNum){
+            return true
+        }
+    }
+    //Por ultimo, si llegamos a esta parte significa que que las versiones son iguales. 
+    //Si tenemos que hacer un OVERRIDE, las version sera valida. En caso contrario no lo sera.
+    return params.OVERRIDE_VERSION
+}
+
+//esta funcion nos permite imprimir mensajes tanto por la consola como por archivos de texto.
+//Escribe el mesaje en un archivo propio (Library_1.log), despues en otro archivo donde se encuentran los logs de todas las pipes (All_Libraries.log)
+//Y finalmente tambien lo escribe por la consolas de la propia pipe. 
+//Estos archivos son los que se recuperan mas tarde desde la pipe padre para imprimir los logs.
+def logMessage(message) {
+    script {
+        withEnv(["MESSAGE=${message}"]){
+            powershell '''
+                cd $env:PARENT_PATH
+                
+                if (Test-Path -Path 'repo-temp') {
+                    # Añadimos el mensaje al archivo de salida. Y lo imprimimios en la consola
+                    "[$env:JOB_BASE_NAME #$env:BUILD_ID]: $env:MESSAGE" | Out-File -Append -FilePath (Join-Path -Path 'repo-temp' -ChildPath "$env:JOB_BASE_NAME.log")
+                    "[$env:JOB_BASE_NAME #$env:BUILD_ID]: $env:MESSAGE" | Out-File -Append -FilePath (Join-Path -Path 'repo-temp' -ChildPath "All_Libraries.log")
+                    Write-Host $env:MESSAGE
+                } else {
+                    Write-Host 'repo-temp directory does not exist.'
+                }
+            '''
+        }
+    }
+}

@@ -1,0 +1,155 @@
+pipeline {
+    agent any
+    
+    parameters{
+       base64File 'inputFile'
+    }
+
+    environment {
+        REPO_URL = 'https://github.com/RubenMailloBaena/JenkinsPipelineTest.git'
+        PUSH_URL = '@github.com/RubenMailloBaena/JenkinsPipelineTest.git'
+        BRANCH = 'main'
+        USERNAME = 'RubenMailloBaena'
+        EMAIL = 'rubenmaillo2003@gmail.com'
+        ANT_DIR = 'repo-temp/tools'
+        XML_DIR = '/repo-temp/resources/XML'
+        JAVA_DIR = '/repo-temp/resources/Java'
+        VALID_FORMATS = '.txt,.xml'
+    }
+
+    stages {
+        stage('Validating Input File'){
+            steps{
+                withFileParameter('inputFile'){
+                    powershell '''
+                        $input = "$env:inputFile"
+                        $length = (Get-Item $input).Length
+                        $filename = "$env:inputFile_FILENAME"
+                        $ext = [System.IO.Path]::GetExtension($filename).ToLower()
+                        
+                        if($length -eq 0){
+                            Write-Host "[ERROR]: The file content can't be empty: $input"
+                            exit 1
+                        }
+                        
+                        $validExts = "$env:VALID_FORMATS".Split(',')
+                        if(-not $validExts.Contains($ext)){
+                            Write-Host "[ERROR]: Invalid file format: $ext --> allowed formats: $validExts"
+                            exit 1
+                        }
+                        
+                        Write-Host "Input File Validated!"
+                    '''
+                }
+            }
+        }
+        
+        stage('Prepare Workspace') {
+            steps {
+                script {
+                    powershell '''
+                        if (Test-Path -Path repo-temp) {
+                            Remove-Item -Path repo-temp -Recurse -Force
+                        }
+                        mkdir repo-temp
+                    '''
+                }
+            }
+        }
+
+        stage('CLonar Repositorio') { 
+            steps {
+                dir('repo-temp'){
+                    git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
+                }
+            }
+        }
+        
+        stage('Process Input File'){
+            steps{
+                withFileParameter('inputFile'){
+                    dir ('repo-temp/tools'){
+                       script{
+                           powershell '''
+                                $filename = "$env:inputFile_FILENAME"
+                                $inputFilePath = "$env:inputFile"
+                                
+                                $extension = [System.IO.Path]::GetExtension($filename).ToLower()
+                                
+                                if($extension -eq ".xml"){ #CONVERTIMOS EL XML EN JAVA
+                                    $inputFileDestination = Join-Path -Path "$env:WORKSPACE$env:XML_DIR" -ChildPath "$filename"
+                                    
+                                    $filenameWithoutExt = [System.IO.Path]::GetFileNameWithoutExtension($filename)
+                                    $javaOutputFile = Join-Path -Path "$env:WORKSPACE$env:JAVA_DIR" -ChildPath "$filenameWithoutExt.java"
+    
+                                    javac XMLToJavaConverter.java
+                                    java XMLToJavaConverter $inputFilePath $javaOutputFile $inputFileDestination
+                                    
+                                    if($LASTEXITCODE -ne 0){
+                                        Write-Host "[ERROR]: Java conversion failed. Exiting"
+                                    }
+                                    else{
+                                        Write-Host "[INFO]: Input File: $filename"
+                                        Write-Host "[INFO]: Output Java File: $filenameWithoutExt.java"
+                                        Write-Host "[INFO]: Converted in Path: $javaOutputFile"
+                                        Write-Host "[INFO]: Input XML moved to Path: $inputFileDestination"
+                                    }
+                                }
+                                else{ #MOSTRAMOS EL CONTENIDO DEL TXT EN CONSOLA
+                                    Write-Host "Input file is a .txt, printing $filename content:"
+                                    Get-Content $inputFilePath
+                                }
+                            '''
+                        } 
+                    }
+                }
+            }
+        }
+        
+        stage('Push Files to Repository'){
+            steps{
+                dir('repo-temp'){
+                    withCredentials([string(credentialsId: 'github_push', variable: 'GITHUB_TOKEN')]){
+                        script{
+                            powershell '''
+                                #EVITAR ADVERTENCIAS DE LF/CRLF
+                                git config core.autocrlf true
+                            
+                                git config user.name "$env:USERNAME"
+                                git config user.email "$env:EMAIL"
+                                
+                                git add resources/XML/*.xml
+                                git add resources/Java/*.java
+                                
+                                $env:GIT_URL = "https://${env:GITHUB_TOKEN}$env:PUSH_URL"
+                                
+                                git commit -m "Add input XML and converted Java files"
+                                git push --set-upstream $env:GIT_URL $env:BRANCH
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Compilar con Ant task'){
+            steps{
+                withFileParameter('inputFile'){
+                    dir(env.ANT_DIR){
+                        script{
+                            def antHome = tool name: 'Ant Installation', type: 'hudson.tasks.Ant$AntInstallation'
+                            def mavenHome = tool name: 'Maven Installation', type: 'hudson.tasks.Maven$MavenInstallation'
+                            def mvnCmd = "${mavenHome}\\bin\\mvn.cmd"
+                            
+                            bat """
+                                set INPUT_FILE=${inputFile}
+                                set MVN_CMD=${mvnCmd}
+                                "${antHome}\\bin\\ant.bat" -Dinput.file=%INPUT_FILE% -Dmvn.cmd=%MVN_CMD%
+                            """
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
