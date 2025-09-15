@@ -1,0 +1,28 @@
+- validar que solo sea un XML o TXT el input file
+
+- EL XML debemos leerlo y parsearlo, debe tener una estructura -> dos campos de entrada y uno de salida
+
+- con el XML de entrada se crea un archivo traduciéndolo a JAVA, y después estos dos se pushean al repositorio. Este tiene que estar ordenado, cada archvivo en sus respectivas carpetas. /resoruces -> /XML /Java. 
+
+- La compilación del proyecto no hacer falta que se suba al repositorio. 
+
+----------------------
+
+- validar que los nombres de inputs outputs sean correctos (que no ponga input_sadsad, con un mapa de posibles nombres), los params no pueden tener mas hijos (<param1> Valor1 </param1> no puede tener mas hijos dentro ). Validar la estructura. campo Input obligatorio, outputs opcional, no puede tener nada mas (puede tener solo inputs, pero no solo outputs. Ni tener ninguno otro que no sea inputs o outputs). Poner atributo para indicar el tipo de variable, String boolean, etc. (mirar ejemplo alberto). 
+
+
+
+----------------------
+- Hacer una pipe que le pongamos un numero de versión, este tiene que validar que ya no exista, si es asi da error. Si no creamos la nueva versión. Este recuperara de un git, un archivo con el orden en el que debemos actualizar las librerías. A partir de este archivo, llamaremos a todas la pipes hijas (pipes nuevas). Que actualizan la respectiva librería con la nueva versión. Para simularlas, serán scripts de Java que simularan estas pipes (print que ponga de X versión a Y versión). Por ultimo, estas pipes hijas deberán cambiar el pom.xml correspondiente en un git. Donde deberán asegurarse que se hace push de esta nueva versión. Y todos estos cambios se deben reflejar o printear poco a poco en la primera pipe.
+
+Añadir que cuando se actualizan añadan un check en una lista, entonces si alguna tiene un error y se para, no tendrá el check y cuando ejecutemos todas las pipes si no todas tienen check empezaremos desde la que no tiene un check. De esta manera no se ejecutan todas otra vez. 
+
+Añadir un check cuando ejecutemos la pipe padre para que nos permita sobreescribir una versión. Es decir si la librería 1 y3 están en la versión 4.0.1 y la 2 esta en la 4.0.0, si volvemos a poner la versión 4.0.1 con la cajita marcada. En vez de ignorar la 1y3 volverá a pasar por estas sin dar error, por lo que deberán también tener un bool para aceptar una versión igual. 
+
+
+--------------------------------
+
+- el argumento de horas que sea un rango entre horas.
+- añadir parámetros para seleccionar de que maquina queremos recuperar los logs (carpetas) y también un fichero especifico. 
+ Tienes que poder seleccionar multiples carpetas especificas, las que queramos. (Que sea una lista en las que puedes seleccionar las que quieras, con un booleano para seleccionarlas todas de golpe.) Ademas dentro de estas carpetas podemos seleccionar que archivo de log queremos filtrar solo. Por ejemplo poner el patron de log_1 para que en todas las carpetas que hemos seleccionado solo busque el archivo que coincida.
+ 

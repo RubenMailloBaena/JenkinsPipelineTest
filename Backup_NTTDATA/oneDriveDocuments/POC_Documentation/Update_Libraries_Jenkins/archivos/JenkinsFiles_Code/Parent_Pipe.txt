@@ -1,0 +1,175 @@
+ pipeline{
+    agent any
+    
+    parameters {
+        //PARAMETRO CON EL NUEVO NUMERO DE VERSION
+        validatingString( 
+            name: 'NEW_VERSION', 
+            defaultValue: '-1', 
+            regex: /^\s*[0-9.]+\s*$/, //SOLO PERMITE NUMEROS Y PUNTOS 
+            failedValidationMessage: 'Only can use numbers and dots (ex: 1.0.1)', 
+            description: 'Add the new version for the libraries.' )
+            
+        //PARAMETRO PARA DETERMINAR SI SE SOBREESCRIBEN LAS VERSIONES
+        booleanParam(
+            defaultValue: false,
+            description: 'Update Libraries with the same version',
+            name: 'OVERRIDE_VERSION'
+            )
+    }
+    
+     environment{ 
+        //NOMBRE DEL ARCHIVO CON EL ORDEN DE PIPES A EJECUTAR.
+        ORDER_FILE = 'UpdateOrder.txt'
+        //ARCHIVO CON LAS VERSIONES DE LA LIBRERIS.
+        CHECK_FILE = 'CheckList.txt' 
+        
+        //GIT ATTRIBUTES 
+        REPO_URL = 'https://github.com/RubenMailloBaena/JenkinsPipelineTest.git' 
+        PUSH_URL = '@github.com/RubenMailloBaena/JenkinsPipelineTest.git' 
+        BRANCH = 'main' 
+        USERNAME = 'RubenMailloBaena' 
+        EMAIL = 'rubenmaillo2003@gmail.com' 
+        CURRENT_LIBRARY = '' 
+     }
+    
+    stages {
+        stage('Prepare Workspace') { 
+            steps { 
+                //LIMPIAMOS EL DIRECTORIO PREVIO Y CREAMOS UN WORKSPACE NUEVO
+                cleanWs()
+                powershell ''' 
+                if (Test-Path -Path repo-temp){ 
+                    Remove-Item -Path repo-temp -Recurse -Force 
+                } 
+                mkdir repo-temp 
+                ''' 
+            }
+        }
+        
+        stage('Clonar Repositorio') { 
+            steps {
+                //CLONAMOS EL REPOSITORIO DE GIT EN EL WORKSPACE
+                dir('repo-temp') {
+                    git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
+                }
+            }
+        }
+        
+        stage('Execute pipelines') { 
+            steps { 
+                //Entramos al directorio del WS donde tenemos los diferentes archivos necesarios (el orden de ejecucion y lista de checks).
+                dir('repo-temp/Libraries_Update_Files') { 
+                    script { 
+                        //Verificamos que se encuentra el archivo con el orden de ejecucion.
+                        if (fileExists("${env.ORDER_FILE}")) { 
+                            //Obtenemos su contenido y lo separamos con los \n, para tener los nombres en una lista (libraries).
+                            def content = readFile("${env.ORDER_FILE}") 
+                            echo "Executing pipes in the next order:\n${content}" 
+                            
+                            def libraries = content.split('\n').collect { it.trim() }.findAll { it } 
+                            
+                            //Hacemos los mismo con el archivo que contiene las versiones (Checks), y lo guardamos en versions.
+                            def versions = [] 
+                            if(fileExists("${env.CHECK_FILE}")){ 
+                                def checkContent = readFile("${env.CHECK_FILE}") 
+                                echo "Current Versions: \n${checkContent}" 
+                                versions = checkContent.split('\n').collect{it.trim()}.findAll{it} 
+                            } else{ 
+                                powershell "exit 1" 
+                            } 
+                            
+                            //Añadimos un contador para saber por que libreria vamos en la ejecucion dentro del bucle (1,2,3, etc.).
+                            int count = 0 
+                            for (library in libraries) { //Recorremos todas las librerias de la lista.
+                                
+                                //Obtenemos la nueva version que tenemos en parametros, y la que tenemos en la lista de checks.
+                                def newVersion = params.NEW_VERSION.trim() 
+                                def currentVersion = versions[count].trim() 
+                                
+                                //Si las versiones son iguales, pasaremos a la siguiente ejecucion, nos saltaremos esta pipe. (En caso de que ya este actualizada).
+                                //Si tenemos marcado la checkBox de override, aunque las versiones sean iguales volveremos a ejecutar la pipe para actualizarlas.
+                                if (newVersion != currentVersion || params.OVERRIDE_VERSION) { 
+                                    echo "Triggering ${library}..." 
+                                    //Añadimos todos los parametros necesarios a la pipie que vamos a ejecutar.
+                                    def result = build job: "${library}", 
+                                    parameters: [string(name: 'PARAM_1', value: "${params.NEW_VERSION}"), 
+                                                string(name: 'USERNAME', value: "${env.USERNAME}"), 
+                                                string(name: 'EMAIL', value: "${env.EMAIL}"), 
+                                                string(name: 'BRANCH', value: "${env.BRANCH}"), 
+                                                string(name: 'PARENT_PATH', value: "${env.WORKSPACE}"), 
+                                                string(name: 'PUSH_URL', value: "${env.PUSH_URL}"),
+                                                booleanParam(name: 'OVERRIDE_VERSION', value: params.OVERRIDE_VERSION)], 
+                                    propagate: true, 
+                                    wait: true 
+                                    
+                                    //Actualizamos la version que teniamos en la lista de Checks.
+                                    versions[count] = "${params.NEW_VERSION}" 
+                                    
+                                     //Si se ha ejecutado con exito, sobreescribimos en el archivo de checks esta nueva version.
+                                     def contenidoArchivo = '' 
+                                     for (int i = 0; i < versions.size(); i++) { 
+                                         contenidoArchivo += versions[i] 
+                                         if (i < versions.size() - 1) { 
+                                             contenidoArchivo += '\n' 
+                                         } 
+                                     } 
+                                     writeFile file: "${env.CHECK_FILE}", text: contenidoArchivo 
+                                     echo "Updated ${env.CHECK_FILE} with new versions."
+                                    
+                                    //Por ultimo, vamos al directorio padre, donde se encuentran los archivos de logs generados por las pipes. 
+                                    //E intentamos recuperar el log correspondiente a la pipe ejecutada. Si lo encontramos mostramos su contenido por consola.
+                                    dir('..'){ 
+                                        script{ 
+                                            withEnv(["CURRENT_LIBRARY=${library}.log"]){ 
+                                                echo "Printing ${library} execution logs:" 
+                                                powershell ''' 
+                                                    if (Test-Path $env:CURRENT_LIBRARY) { 
+                                                        Get-Content $env:CURRENT_LIBRARY | ForEach-Object { Write-Host $_ } 
+                                                    } else { 
+                                                        Write-Host "pipeline logs not found." 
+                                                    } 
+                                                ''' 
+                                            } 
+                                        } 
+                                    }
+                                } 
+                                count++ 
+                            } 
+                        } else { 
+                            echo "File '${env.ORDER_FILE}' not found. Exiting." 
+                            powershell "exit 1" 
+                        } 
+                    } 
+                } 
+            } 
+        } 
+    }
+    
+    post {
+        always {
+            //Cuando toda la pipe termine, sea con errores o con exito siempre llegaremos a esta parte. 
+            //Aqui subimos al repositorio el archivo de Checks con las nuevas versiones. Para poder tenerlas en cuenta en la siguiente ejecucion.
+            dir('repo-temp') {
+                withCredentials([string(credentialsId: 'github_push', variable: 'GITHUB_TOKEN')]) {
+                    script {
+                        powershell ''' 
+                            git config core.autocrlf true 
+                            
+                            git config user.name "$env:USERNAME" 
+                            git config user.email "$env:EMAIL" 
+                            
+                            git add Libraries_Update_Files/*.txt 
+                            $env:GIT_URL = "https://${env:GITHUB_TOKEN}$env:PUSH_URL" 
+                            
+                            git commit -m "CheckFile Updated!" 
+                            git push --set-upstream $env:GIT_URL $env:BRANCH 
+                        '''
+                            
+                        echo "Successfully pushed new Checks To Repo"
+                    }
+                }
+            }
+        }
+    }
+}

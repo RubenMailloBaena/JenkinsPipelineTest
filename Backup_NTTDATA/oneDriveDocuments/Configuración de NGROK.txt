@@ -1,0 +1,10 @@
+Configuración de NGROK. 
+
+- Descargar NGROK y ejecutarlo. 
+- Entrar a la web de NGROK con nuestra sesión para obtener el authtoken. (cuenta rubenmaillo2003@gmail.com)
+- ejecutar en ngrok --> ngrok config add-authtoken TU_TOKEN
+- ejecutar en ngrok --> ngrok http 8888 (esto hace que pueda comunicarse con nuestro config-server)
+
+- nos dará una URL, tenemos que utilizat la que sale en FORWARDING
+- la añadimos a un WebHook de GitHub o gitlab y ponemos el cuerpo un empty json. 
+- A la URL tenemos que añadirle el '/monitor' para que acceda al endpoint del config-server y actualize los microservicios correspondientes. 

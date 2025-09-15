@@ -1,0 +1,18 @@
+-------------------------------LINKS
+
+https://axet.nttdata.com/gaia/
+
+https://wise.axet.emeal.nttdata.com/home
+
+https://nttdemealonedesk.service-now.com/sp
+
+https://university.emeal.nttdata.com/my/
+
+https://excalidraw.com/
+
+Documentación de Spring Cloud Config:
+https://docs.spring.io/spring-cloud-config/docs/current/reference/html/
+
+-------------------------------CURSOS
+
+Microservicios video --> COMPLETADO --> https://videocursos.co/linea/curso-de-microservicios-con-spring-boot/modulos/curso-de-microservicios-con-spring-boot/
