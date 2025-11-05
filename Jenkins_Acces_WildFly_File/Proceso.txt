@@ -1,0 +1,5 @@
+1. Una vez instalado WildFly en la maquina virtula. Seguir el siguiente tutorial para iniciarlo: 
+	https://computingforgeeks.com/install-wildfly-application-server-on-ubuntu-debian/
+
+Chat Axet Gaia sobre configurar archivo de config de prueba para POC: 
+	https://axet.nttdata.com/gaia/answers/92519535-4cfa-4006-82fa-e6eb9bdaec96
