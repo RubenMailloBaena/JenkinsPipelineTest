@@ -1,27 +1,153 @@
-3: authmethod_lookup publickey
-debug3: remaining preferred: keyboard-interactive,password
-debug3: authmethod_is_enabled publickey
-debug1: Next authentication method: publickey
-debug1: Offering public key: C:\\Users\\rmaillob/.ssh/id_rsa RSA SHA256:JGP8jybR9SKt+1Yp3+2VTFIcFkL9CcZ/qXTykP+MV/k
-debug3: send packet: type 50
-debug2: we sent a publickey packet, wait for reply
-debug3: receive packet: type 51
-debug1: Authentications that can continue: publickey,password
-debug1: Trying private key: C:\\Users\\rmaillob/.ssh/id_ecdsa
-debug3: no such identity: C:\\Users\\rmaillob/.ssh/id_ecdsa: No such file or directory
-debug1: Trying private key: C:\\Users\\rmaillob/.ssh/id_ecdsa_sk
-debug3: no such identity: C:\\Users\\rmaillob/.ssh/id_ecdsa_sk: No such file or directory
-debug1: Trying private key: C:\\Users\\rmaillob/.ssh/id_ed25519
-debug3: no such identity: C:\\Users\\rmaillob/.ssh/id_ed25519: No such file or directory
-debug1: Trying private key: C:\\Users\\rmaillob/.ssh/id_ed25519_sk
-debug3: no such identity: C:\\Users\\rmaillob/.ssh/id_ed25519_sk: No such file or directory
-debug1: Trying private key: C:\\Users\\rmaillob/.ssh/id_xmss
-debug3: no such identity: C:\\Users\\rmaillob/.ssh/id_xmss: No such file or directory
-debug1: Trying private key: C:\\Users\\rmaillob/.ssh/id_dsa
-debug3: no such identity: C:\\Users\\rmaillob/.ssh/id_dsa: No such file or directory
-debug2: we did not send a packet, disable method
-debug3: authmethod_lookup password
-debug3: remaining preferred: ,password
-debug3: authmethod_is_enabled password
-debug1: Next authentication method: password
-vboxuser@192.168.1.163's password:
+pipeline{
+    agent any
+    
+    environment{
+        //JENKINS
+        WP_NAME = 'git-repo'
+        
+        //GITHUB
+        USERNAME = 'RubenMailloBaena' 
+        EMAIL = 'rubenmaillo2003@gmail.com' 
+        REPO_URL = 'https://github.com/RubenMailloBaena/JenkinsPipelineTest.git'
+        PUSH_URL = '@github.com/RubenMailloBaena/JenkinsPipelineTest.git'
+        BRANCH = 'main'
+        GIT_DIR = '/Jenkins_Acces_WildFly_File'
+        GIT_FILE = 'POC_currentConfig.txt'
+        
+        //VM
+        VM_IP = '172.20.10.11' //192.168.1.174' //IP de la maquina virtual
+        VM_PORT = '8080'        //Puerto que escucha la VM
+        MICRO_CR = 'wildfly_micro-0.0.1-SNAPSHOT' //Microservice context-root
+        MICRO_ENDPOINT = '/config'
+        MICRO_CONF_NAME = 'micro-config.txt' //output file with micro config
+    }
+    
+    stages{
+        stage('Create Workspace'){
+            steps{
+                script{
+                    cleanWs()
+                    powershell '''
+                        if(Test-Path -Path "$env:WP_NAME"){
+                            Remove-Item -Path "$env:WP_NAME" -Recurse -Force
+                        }
+                        mkdir "$env:WP_NAME"
+                    '''
+                }
+            }
+        }
+
+        stage('Get config file from VM and Clone repo'){
+            steps{
+                //GET FILE FROM VM
+                script{
+                    powershell"""
+                        curl -v http://${env.VM_IP}:${env.VM_PORT}/${env.MICRO_CR}${env.MICRO_ENDPOINT} -UseBasicParsing -o ${env.MICRO_CONF_NAME}
+                    """
+                }
+                
+                //CLONE GIT REPO
+                dir(env.WP_NAME){
+                    git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
+                }
+            }
+        }
+        
+        stage('Check if config has changed'){
+            steps{
+                script{
+                    //RECUPERAR LOS FILES CORRESPONDIENTES
+                    //Recuperamos la config del micro
+                    def VM_File = ''
+                    def original_VM_File = ''
+                    dir(env.WORKSPACE){
+                        if(fileExists("${env.MICRO_CONF_NAME}")){
+                            original_VM_File = readFile("${env.MICRO_CONF_NAME}")
+                            VM_File = readJSON file: "${env.MICRO_CONF_NAME}", returnPojo: true
+                        } else {
+                            error "No VM config file FOUND"
+                        }
+                        echo "VM config: ${VM_File} Length: ${VM_File.size()}"
+                    }
+                    
+                    //Recuperamos la config del repositorio
+                    def Repo_File = ''
+                    dir("${env.WP_NAME}/${env.GIT_DIR}"){
+                        if(fileExists("${env.GIT_FILE}")){
+                            Repo_File = readJSON file: "${env.GIT_FILE}"
+                        } else {
+                            error "No repository config file FOUND"
+                        }
+                        echo "Repo config file: ${Repo_File} Length: ${Repo_File.size()}"
+                        
+                    //COMPROBAMOS SI HAY ALGO DISTINTO ENTRE LOS FILES
+                        def configChanged = 0
+                        VM_File.each{ key, value ->
+                            if("${Repo_File[key]}" != "$value"){
+                                echo "$key value changed -> Repo: ${Repo_File[key]} | VM: $value"
+                                configChanged = 1
+                            } else{
+                                echo "$key correct"
+                            }
+                        }
+                        
+                        //GITHUB PUSH
+                        if(configChanged == 1){
+                            //Override del archivo de conf del repositorio
+                            echo "Configuration changed. Push Changes to Repo"
+                            writeFile file: "${env.GIT_FILE}", text: original_VM_File
+                            echo "new repo File: ${original_VM_File}"
+                        }
+                        else{
+                            echo "All config files are the same."
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Push changes to Repo'){
+            steps{
+                dir(env.WP_NAME){
+                    withCredentials([string(credentialsId: 'github_push', variable: 'GITHUB_TOKEN')]) {
+                        script {
+                            powershell ''' 
+                                git config core.autocrlf true 
+                                
+                                git config user.name "$env:USERNAME" 
+                                git config user.email "$env:EMAIL" 
+                                
+                                git add $env:GIT_DIR/*.txt
+                                $env:GIT_URL = "https://${env:GITHUB_TOKEN}$env:PUSH_URL" 
+                                
+                                git commit -m "VM Microservice Conf Updated!" 
+                                git push --set-upstream $env:GIT_URL $env:BRANCH
+                            '''
+                                
+                            echo "Successfully pushed new config To Repo"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+-----------------------------------------
+
+powershell.exe : git : El término 'git' no se reconoce como nombre de un cmdlet, función, archivo de script o programa ejecutable. 
+En C:\ProgramData\Jenkins\.jenkins\workspace\JBoss_VM_pipe\git-repo@tmp\durable-aa5ed473\powershellWrapper.ps1: 3 Carácter: 1
++ & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Comm ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (git : El términ...ma ejecutable. :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Compruebe si escribió correctamente el nombre o, si incluyó una ruta de acceso, compruebe que dicha ruta es correcta e 
+inténtelo de nuevo.
+En C:\ProgramData\Jenkins\.jenkins\workspace\JBoss_VM_pipe\git-repo@tmp\durable-aa5ed473\powershellScript.ps1: 2 
+Carácter: 33
++                                 git config core.autocrlf true
++                                 ~~~
+    + CategoryInfo          : ObjectNotFound: (git:String) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : CommandNotFoundException
