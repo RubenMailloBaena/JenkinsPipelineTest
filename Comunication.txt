@@ -151,3 +151,10 @@ Carácter: 33
 +                                 ~~~
     + CategoryInfo          : ObjectNotFound: (git:String) [], ParentContainsErrorRecordException
     + FullyQualifiedErrorId : CommandNotFoundException
+
+
+
+
+
+
+https://docs.google.com/document/d/1lFpg1IK2EVMWHZpQADdcRtyCtuas5p0NKaWZ4rSspgI/edit?tab=t.0
