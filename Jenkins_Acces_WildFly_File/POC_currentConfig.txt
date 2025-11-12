@@ -1,1 +1,1 @@
-{"appName":"wildfly_micro","port":2020,"timeOut":5555,"maxRetries":2456}
+{"appName":"wildfly_name_changed","port":2020,"timeOut":5555,"maxRetries":2456}
