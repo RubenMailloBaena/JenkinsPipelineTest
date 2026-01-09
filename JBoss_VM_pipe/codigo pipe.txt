@@ -1,0 +1,134 @@
+pipeline{
+    agent any
+    
+    environment{
+        //JENKINS
+        WP_NAME = 'git-repo'
+        
+        //GITHUB
+        USERNAME = 'RubenMailloBaena' 
+        EMAIL = 'rubenmaillo2003@gmail.com' 
+        REPO_URL = 'https://github.com/RubenMailloBaena/JenkinsPipelineTest.git'
+        PUSH_URL = '@github.com/RubenMailloBaena/JenkinsPipelineTest.git'
+        BRANCH = 'main'
+        REPO_DIR = 'Jenkins_Acces_WildFly_File'
+        GIT_FILE = 'POC_currentConfig.txt'
+        
+        //VM
+        VM_IP = '172.20.10.11' // '192.168.1.174' //IP de la maquina virtual
+        VM_PORT = '8080'        //Puerto que escucha la VM
+        MICRO_CR = 'wildfly_micro-0.0.1-SNAPSHOT' //Microservice context-root
+        MICRO_ENDPOINT = '/config'
+        MICRO_CONF_NAME = 'micro-config.txt' //output file with micro config
+    }
+    
+    stages{
+        stage('Create Workspace'){
+            steps{
+                script{
+                    cleanWs()
+                    powershell '''
+                        if(Test-Path -Path "$env:WP_NAME"){
+                            Remove-Item -Path "$env:WP_NAME" -Recurse -Force
+                        }
+                        mkdir "$env:WP_NAME"
+                    '''
+                }
+            }
+        }
+
+        stage('Get config file from VM and Clone repo'){
+            steps{
+                //GET FILE FROM VM
+                script{
+                    powershell"""
+                        curl -v http://${env.VM_IP}:${env.VM_PORT}/${env.MICRO_CR}${env.MICRO_ENDPOINT} -UseBasicParsing -o ${env.MICRO_CONF_NAME}
+                    """
+                }
+                
+                //CLONE GIT REPO
+                dir(env.WP_NAME){
+                    git branch: "${env.BRANCH}", url: "${env.REPO_URL}"
+                }
+            }
+        }
+        
+        stage('Check if config has changed'){
+            steps{
+                script{
+                    //RECUPERAR LOS FILES CORRESPONDIENTES
+                    //Recuperamos la config del micro
+                    def VM_File = ''
+                    def original_VM_File = ''
+                    dir(env.WORKSPACE){
+                        if(fileExists("${env.MICRO_CONF_NAME}")){
+                            original_VM_File = readFile("${env.MICRO_CONF_NAME}")
+                            VM_File = readJSON file: "${env.MICRO_CONF_NAME}", returnPojo: true
+                        } else {
+                            error "No VM config file FOUND"
+                        }
+                        echo "VM config: ${VM_File} Length: ${VM_File.size()}"
+                    }
+                    
+                    //Recuperamos la config del repositorio
+                    def Repo_File = ''
+                    dir("${env.WP_NAME}/${env.REPO_DIR}"){
+                        if(fileExists("${env.GIT_FILE}")){
+                            Repo_File = readJSON file: "${env.GIT_FILE}"
+                        } else {
+                            error "No repository config file FOUND"
+                        }
+                        echo "Repo config file: ${Repo_File} Length: ${Repo_File.size()}"
+                        
+                    //COMPROBAMOS SI HAY ALGO DISTINTO ENTRE LOS FILES
+                        def configChanged = 0
+                        VM_File.each{ key, value ->
+                            if("${Repo_File[key]}" != "$value"){
+                                echo "$key value changed -> Repo: ${Repo_File[key]} | VM: $value"
+                                configChanged = 1
+                            } else{
+                                echo "$key correct"
+                            }
+                        }
+                        
+                        //GITHUB PUSH
+                        if(configChanged == 1){
+                            //Override del archivo de conf del repositorio
+                            echo "Configuration changed. Push Changes to Repo"
+                            writeFile file: "${env.GIT_FILE}", text: original_VM_File
+                            echo "new repo File: ${original_VM_File}"
+                            
+                            //PUSH a GITHUB
+                            PushChanges()
+                        }
+                        else{
+                            echo "All config files are the same."
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+//PUSH Changes to repo function
+def PushChanges(){
+    dir("${env.WORKSPACE}/${env.WP_NAME}"){
+        withCredentials([string(credentialsId: 'github_push', variable: 'GITHUB_TOKEN')]) {
+            script {
+                powershell '''
+                    git config core.autocrlf true 
+                    
+                    git config user.name "$env:USERNAME" 
+                    git config user.email "$env:EMAIL" 
+                    
+                    git add $env:REPO_DIR/$env:GIT_FILE
+                    $env:GIT_URL = "https://${env:GITHUB_TOKEN}$env:PUSH_URL" 
+                    
+                    git commit -m "VM Microservice Conf Updated!" 
+                    git push --set-upstream $env:GIT_URL $env:BRANCH
+                '''
+            }
+        }
+    }
+}
