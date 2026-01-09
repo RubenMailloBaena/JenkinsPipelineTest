@@ -1,0 +1,4 @@
+spring.application.name: upgrade_version_micro_example
+server.port: 8000
+
+app.version: "@project.version@"
