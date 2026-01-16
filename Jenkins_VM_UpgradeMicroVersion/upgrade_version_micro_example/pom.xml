@@ -33,6 +33,14 @@
 	</properties>
 	<dependencies>
 
+			<exclusions>
+				<!-- Para evitar conflicto entre commons logging y spring-jcl -->
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
