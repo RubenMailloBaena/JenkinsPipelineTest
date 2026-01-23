@@ -13,6 +13,7 @@
 	<version>${revision}</version>
 	<packaging>war</packaging>
 	<name>upgrade_version_micro_example</name>
+	<finalname>upgrade_version_micro_example</finalname>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
