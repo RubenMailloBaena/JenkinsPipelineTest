@@ -1,23 +1,170 @@
-Actualizar microservicios desplegados sin tiempo de caída
+# Actualizar microservicios desplegados sin tiempo de caída
 
-El objetivo de esta POC es realizar una pipeline de Jenkins que nos permita actualizar un microservicio ya desplegado por una versión nueva y actualizada del mismo, teniendo en cuenta que no se debe perder servicio en ningún momento. Para ello emplearemos una técnica o estrategia, que comentaremos más adelante, llamada Blue-Green Deployment.
+El objetivo de esta POC es realizar una pipeline de Jenkins que nos permita actualizar un microservicio ya desplegado por una versión nueva y actualizada del mismo, teniendo en cuenta que **no se debe perder servicio en ningún momento**. Para ello emplearemos una técnica o estrategia, que comentaremos más adelante, llamada **Blue-Green Deployment**.
 
-Antes que nada, comentaremos los distintos programas que hemos empleado. Para el despliegue de los microservicios usaremos WildFly, que es la versión comunitaria y gratuita de JBoss, un servidor de aplicaciones que nos permite desplegar nuestros microservicios.
-También utilizaremos Nginx, un servidor web y proxy inverso de alto rendimiento, que nos permitirá actuar como intermediario entre el cliente y nuestro servicio, algo clave para esta POC.
+Antes que nada, comentaremos los distintos programas que hemos empleado. Para el despliegue de los microservicios usaremos **WildFly**, que es la versión comunitaria y gratuita de **JBoss**, un servidor de aplicaciones que nos permite desplegar nuestros microservicios.
+También utilizaremos **Nginx**, un servidor web y proxy inverso de alto rendimiento, que nos permitirá actuar como intermediario entre el cliente y nuestro servicio, algo clave para esta POC.
 
-Por último, las demás aplicaciones y tecnologías utilizadas son Jenkins, Spring Boot y GitHub. Cabe destacar que esta POC se ha realizado dentro de una máquina virtual de Oracle VM VirtualBox, con un sistema operativo Linux, por lo que los comandos de la pipeline pueden variar respecto a una realizada en Windows.
+Por último, las demás aplicaciones y tecnologías utilizadas son **Jenkins, Spring Boot y GitHub**. Cabe destacar que esta POC se ha realizado dentro de una **máquina virtual de Oracle VM VirtualBox**, con un sistema operativo **Linux**, por lo que los comandos de la pipeline pueden variar respecto a una realizada en Windows.
 
 Se explicará paso a paso cómo se ha hecho todo el proceso para que pueda replicarse en caso de ser necesario. Primero se explicará cómo hacerlo de manera manual y, por último, se comentará el código de la pipeline, que automatiza todo el proceso.
 
-MICRO-SERVICIO
+---
 
-Dicho esto, vamos a empezar con el microservicio de ejemplo que tenemos para esta POC. Este no es más que un RestController que nos permite consultar la versión actual del microservicio mediante el siguiente endpoint:
+## MICRO-SERVICIO
 
+Dicho esto, vamos a empezar con el microservicio de ejemplo que tenemos para esta POC. Este no es más que un **RestController** que nos permite consultar la versión actual del microservicio mediante el siguiente endpoint:
+
+```
 /version
+```
 
+Para ello, nuestro `RestController` se ve de la siguiente manera:
 
-Para ello, nuestro RestController se ve de la siguiente manera:
+*(código del controlador)*
 
-(código del controlador)
+Con `@Value` podemos obtener un valor referenciado desde nuestro `application.yml`, donde tenemos lo siguiente:
+
+*(configuración del application.yml)*
+
+Con `@project.version@` lo que hacemos es obtener el valor de la versión definida en nuestro `pom.xml`. De esta manera, cuando despleguemos nuevas versiones del microservicio, podremos consultar fácilmente qué versión está en ejecución.
+
+Una vez hecho esto, podemos generar una build que más adelante desplegaremos en WildFly. Desde una terminal accedemos al directorio del microservicio y ejecutamos los siguientes comandos:
+
+```bash
+cd <ruta del micro>
+mvn versions:set -DnewVersion={NUEVA_VERSION} -DgenerateBackupPoms=false
+mvn clean package
+```
+
+En `{NUEVA_VERSION}` indicamos la versión que queremos asignar a la build del microservicio, por ejemplo `1.0.1`.
+Esto generará una build `.war` dentro del directorio `/target`, que será la que utilizaremos para el despliegue.
+
+---
+
+## WILDFLY
+
+Ahora descargaremos e instalaremos **WildFly** en nuestro dispositivo. Para arrancarlo, ejecutamos:
+
+```bash
+/opt/wildfly/bin/standalone.sh
+```
+
+A continuación, debemos crear un nuevo usuario con permisos ejecutando el siguiente archivo:
+
+```bash
+/opt/wildfly/bin/add-user.sh
+```
+
+Una vez creado, podremos acceder a la consola de administración mediante:
+
+```
+http://localhost:9990
+```
+
+y deberíamos ver la pantalla de bienvenida de WildFly.
+
+Ahora podemos desplegar nuestro `.war` a través de esta consola o mediante la terminal. En nuestro caso lo haremos desde la terminal, ya que es el método que utilizará Jenkins:
+
+```bash
+cd <carpeta donde tengamos el microservicio>
+/opt/wildfly/bin/jboss-cli.sh --connect
+```
+
+Este comando nos pedirá el usuario y la contraseña configurados previamente. Una vez dentro, podemos desplegar el microservicio de la siguiente manera:
+
+```bash
+deploy target/{BUILD_MICRO}.war --force
+```
+
+Donde `BUILD_MICRO` es el nombre del archivo `.war` generado.
+Una vez desplegado, deberíamos verlo listado en WildFly y poder acceder a él a través del puerto `8080`.
+
+En este punto ya tenemos el microservicio funcionando y dando servicio correctamente. El problema aparece cuando queremos **actualizar el microservicio**, ya que al sustituir una versión por otra se produciría una caída del servicio o incluso un cambio en la URL. Para evitarlo utilizaremos la estrategia **Blue-Green Deployment**.
+
+---
+
+## BLUE-GREEN DEPLOYMENT
+
+Esta técnica consiste en tener **dos instancias del mismo microservicio** ejecutándose al mismo tiempo. De esta forma, el cambio de una versión a otra se realiza de manera rápida y sin cortes de servicio.
+
+Para ello, además de tener dos builds del mismo microservicio desplegadas, necesitamos un **proxy**, que actúe como intermediario entre el cliente y el servicio. Para este proxy utilizaremos **Nginx**.
+
+```
+Cliente → Nginx (proxy) → WildFly (microservicio)
+```
+
+El proceso será el siguiente:
+
+* Tendremos el microservicio actual desplegado y dando servicio (blue).
+* El proxy apuntará inicialmente a esta versión.
+* Desplegamos la nueva versión del microservicio (green).
+* Comprobamos que la nueva versión funciona correctamente.
+* Cambiamos la configuración del proxy para que apunte a green en lugar de blue.
+* El cambio se realiza prácticamente de manera instantánea, sin caída de servicio.
+* Finalmente, eliminamos la versión antigua (blue).
+
+Gracias al uso del proxy, la URL de acceso para el cliente será siempre la misma.
+
+---
+
+## NGINX
+
+Ahora instalaremos **Nginx** para llevar a cabo la estrategia mencionada.
+Una vez instalado, crearemos un nuevo archivo de configuración en el siguiente directorio:
+
+```bash
+cd /etc/nginx/conf.d/
+sudo touch test.conf
+sudo nano test.conf
+```
+
+El nombre del archivo `.conf` puede ser cualquiera. Dentro de este archivo deberemos tener la configuración correspondiente del proxy.
+
+Cada vez que modifiquemos y guardemos este archivo, debemos aplicar los cambios con el siguiente comando:
+
+```bash
+sudo nginx -s reload
+```
+
+Para aplicar la estrategia Blue-Green, simplemente cambiaremos el valor de `proxy_pass` entre `/blue` y `/green`. Tras hacer el reload, el cambio será inmediato y sin cortes de servicio.
+
+Cabe destacar que Nginx, por defecto, actúa como proxy en local. Si queremos utilizar un nombre distinto a `localhost` o `127.0.0.1`, debemos añadirlo al archivo `/etc/hosts`:
+
+```bash
+sudo nano /etc/hosts
+```
+
+De esta forma podremos usar un nombre de proxy personalizado, que en realidad seguirá apuntando a localhost.
+
+---
+
+## JENKINS
+
+Para comprobar que el cambio se realiza sin cortes, se creó un script que realiza un `curl` al proxy cada 0,5 segundos. En caso de que el servicio caiga, se mostraría un error `404`.
+En las pruebas realizadas se puede observar que el cambio de versión se produce sin interrupciones.
+
+Antes de automatizar el proceso, fue necesario permitir que Jenkins ejecutara comandos con `sudo`, ya que necesita modificar la configuración de Nginx. Para ello se añadió la siguiente línea al archivo sudoers:
+
+```bash
+sudo visudo
+```
+
+*(línea añadida al final del archivo)*
+
+---
+
+## PIPELINE DE JENKINS
+
+El funcionamiento de la pipeline es el siguiente:
+
+* Solicita por parámetro la nueva versión del microservicio.
+* Clona el repositorio de GitHub.
+* Genera una nueva build del microservicio.
+* Detecta qué versión está activa en Nginx (blue o green).
+* Despliega la nueva versión en WildFly.
+* Comprueba que el nuevo microservicio funciona correctamente.
+* Cambia el proxy de Nginx para apuntar a la nueva versión.
+* Elimina la versión antigua del microservicio.
 
 A continuación se muestra el código completo de la pipeline utilizada.
